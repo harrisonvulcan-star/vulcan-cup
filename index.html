@@ -1255,9 +1255,10 @@ function daySummary(){
     const underdog=favHome?m.away:m.home, favorite=favHome?m.home:m.away;
     const udRank=favHome?ra:rh, favRank=favHome?rh:ra, gap=udRank-favRank;
     const underdogWon=draw?false:(favHome?m.awayScore>m.homeScore:m.homeScore>m.awayScore);
-    const o=playerById(ownerOf(underdog)); const own=o?esc(o.name):null;
-    if(underdogWon && gap>=15){ notables.push({gap,text:`${esc(underdog)} (${ordinal(udRank)}) stunned ${esc(favorite)} (${ordinal(favRank)}) ${Math.max(m.homeScore,m.awayScore)}\u2013${Math.min(m.homeScore,m.awayScore)}${own?` \u2014 a big day for ${own}`:''}`}); }
-    else if(draw && gap>=20){ notables.push({gap,text:`${esc(underdog)} (${ordinal(udRank)}) held ${esc(favorite)} (${ordinal(favRank)}) to a ${m.homeScore}\u2013${m.awayScore} draw${own?`, a bonus point for ${own}`:''}`}); }
+    const oU=playerById(ownerOf(underdog)); const ownU=oU?esc(oU.name):'unowned';
+    const oF=playerById(ownerOf(favorite)); const ownF=oF?esc(oF.name):'unowned';
+    if(underdogWon && gap>=15){ notables.push({gap,text:`${esc(underdog)} (${ordinal(udRank)}, <strong>${ownU}</strong>) stunned ${esc(favorite)} (${ordinal(favRank)}, <strong>${ownF}</strong>) ${Math.max(m.homeScore,m.awayScore)}\u2013${Math.min(m.homeScore,m.awayScore)}`}); }
+    else if(draw && gap>=20){ notables.push({gap,text:`${esc(underdog)} (${ordinal(udRank)}, <strong>${ownU}</strong>) held ${esc(favorite)} (${ordinal(favRank)}, <strong>${ownF}</strong>) to a ${m.homeScore}\u2013${m.awayScore} draw`}); }
   });
   if(notables.length){ notables.sort((a,b)=>b.gap-a.gap); parts.push(`Surprise of the day: ${notables.slice(0,2).map(n=>n.text).join('; ')}.`); }
   const next=nextMatchDayKey(day);
