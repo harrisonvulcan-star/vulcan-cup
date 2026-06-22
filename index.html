@@ -1265,7 +1265,7 @@ function daySummary(){
     }
   }
   if(!parts.length) return '';
-  return `<div class="day-review"><div class="dr-h">\U0001F4CA Day in review · ${fmtDateLong(day)}</div><p class="dr-body">${parts.join(' ')}</p></div>`;
+  return `<div class="day-review"><div class="dr-h">📊 Day in review · ${fmtDateLong(day)}</div><p class="dr-body">${parts.join(' ')}</p></div>`;
 }
 function viewLeaderboard(){
   const head=`<div class="lb-head"><h2>Leaderboard</h2>${lbControls()}</div>`;
