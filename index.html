@@ -1245,6 +1245,21 @@ function daySummary(){
     const wo=playerById(ownerOf(winner)); const own=wo?` for <strong>${esc(wo.name)}</strong>`:'';
     parts.push(`Pick of the day: ${esc(winner)}'s ${ws}–${ls} win over ${esc(loser)}${own}.`);
   }
+  const ordinal=n=>{const s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);};
+  const notables=[];
+  dayMatches.forEach(m=>{
+    const rh=rank(m.home), ra=rank(m.away);
+    if(rh==null||ra==null) return;
+    const draw=m.homeScore===m.awayScore;
+    const favHome=rh<ra;
+    const underdog=favHome?m.away:m.home, favorite=favHome?m.home:m.away;
+    const udRank=favHome?ra:rh, favRank=favHome?rh:ra, gap=udRank-favRank;
+    const underdogWon=draw?false:(favHome?m.awayScore>m.homeScore:m.homeScore>m.awayScore);
+    const o=playerById(ownerOf(underdog)); const own=o?esc(o.name):null;
+    if(underdogWon && gap>=15){ notables.push({gap,text:`${esc(underdog)} (${ordinal(udRank)}) stunned ${esc(favorite)} (${ordinal(favRank)}) ${Math.max(m.homeScore,m.awayScore)}\u2013${Math.min(m.homeScore,m.awayScore)}${own?` \u2014 a big day for ${own}`:''}`}); }
+    else if(draw && gap>=20){ notables.push({gap,text:`${esc(underdog)} (${ordinal(udRank)}) held ${esc(favorite)} (${ordinal(favRank)}) to a ${m.homeScore}\u2013${m.awayScore} draw${own?`, a bonus point for ${own}`:''}`}); }
+  });
+  if(notables.length){ notables.sort((a,b)=>b.gap-a.gap); parts.push(`Surprise of the day: ${notables.slice(0,2).map(n=>n.text).join('; ')}.`); }
   const next=nextMatchDayKey(day);
   if(next){
     const games=effMatches().filter(m=>{ if(isPlayed(m)) return false; const a=aestParts(m); return (a?a.dateKey:m.date)===next; }).map(m=>({m,a:aestParts(m)})).sort((x,y)=>(x.a?x.a.ms:0)-(y.a?y.a.ms:0));
@@ -1252,11 +1267,10 @@ function daySummary(){
       const ranked=games.slice().sort((x,y)=>(Math.min(rank(x.m.home)||999,rank(x.m.away)||999))-(Math.min(rank(y.m.home)||999,rank(y.m.away)||999)));
       const ho=t=>{const p=playerById(ownerOf(t));return p?`<strong>${esc(p.name)}</strong>`:'unowned';};
       const fixture=g=>`${esc(g.m.home)} v ${esc(g.m.away)} (${ho(g.m.home)} v ${ho(g.m.away)})`;
-      const first=games[0].a?games[0].a.timeStr:games[0].m.localTime;
       const dt=new Date(day+'T00:00:00Z'), nd=new Date(next+'T00:00:00Z'); const dayLabel=(nd-dt===86400000)?'tomorrow':fmtDateLong(next);
       let look=`Coming up ${dayLabel}: ${games.length} ${games.length===1?'match':'matches'}. Headline fixture: ${fixture(ranked[0])}`;
       if(ranked.length>1) look+=`, with ${fixture(ranked[1])} also on the card`;
-      look+=`. First kickoff ${first} AEST.`;
+      look+=`.`;
       const cnt={};
       games.forEach(g=>{[g.m.home,g.m.away].forEach(t=>{const pid=ownerOf(t);if(!pid)return;(cnt[pid]=cnt[pid]||{n:0,teams:[]});cnt[pid].n++;cnt[pid].teams.push(t);});});
       const multi=Object.keys(cnt).filter(pid=>cnt[pid].n>=2).map(pid=>({name:(playerById(pid)||{}).name||'?',n:cnt[pid].n,teams:cnt[pid].teams})).sort((a,b)=>b.n-a.n);
