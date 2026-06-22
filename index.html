@@ -376,6 +376,10 @@
     .gtable .own{font-size:9px;padding:1px 5px;margin-left:4px} .gtable .tcode{font-size:9px}
     .foot{padding:16px 11px 36px}
   }
+  .day-review{background:linear-gradient(135deg,#ffffff,var(--cream-2));border:1px solid var(--gold-soft);border-left:4px solid var(--gold);border-radius:12px;padding:12px 16px;margin:6px 2px 16px}
+  .day-review .dr-h{font-family:var(--display);font-weight:800;font-size:12.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--pitch-dark);margin-bottom:5px}
+  .day-review .dr-body{margin:0;font-size:14px;line-height:1.5;color:var(--ink)}
+  .day-review .dr-body strong{color:var(--pitch-dark);font-weight:700}
 </style>
 </head>
 <body>
@@ -1169,6 +1173,56 @@ function lbTable(lb){
     `<th>#</th><th style="text-align:left">Player</th><th>GP</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th>`+
     `</tr></thead><tbody>${rows}</tbody></table></div>`;
 }
+function lastResultsDayKey(){
+  let best=null;
+  effMatches().forEach(m=>{
+    if(!isPlayed(m)) return;
+    if(!(m.matchday==null||m.matchday>=SCORE_FROM)) return;
+    const a=aestParts(m); const key=a?a.dateKey:m.date;
+    if(best===null||key>best) best=key;
+  });
+  return best;
+}
+function joinNames(arr){
+  if(arr.length<=1) return arr[0]||'';
+  if(arr.length===2) return arr[0]+' and '+arr[1];
+  return arr.slice(0,-1).join(', ')+' and '+arr[arr.length-1];
+}
+function daySummary(){
+  const day=lastResultsDayKey();
+  if(!day) return '';
+  const per={};
+  effMatches().forEach(m=>{
+    if(!isPlayed(m)) return;
+    if(!(m.matchday==null||m.matchday>=SCORE_FROM)) return;
+    const a=aestParts(m); const key=a?a.dateKey:m.date;
+    if(key!==day) return;
+    [[m.home,m.homeScore,m.awayScore],[m.away,m.awayScore,m.homeScore]].forEach(([team,gf,ga])=>{
+      const pid=ownerOf(team); if(!pid) return;
+      const res=gf>ga?'won':(gf===ga?'drew':'lost');
+      const o=per[pid]||(per[pid]={pts:0,w:0,d:0,l:0,gd:0,won:[],drew:[],lost:[]});
+      o.pts+=(res==='won'?3:res==='drew'?1:0); o.gd+=(gf-ga);
+      if(res==='won'){o.w++;o.won.push(team);} else if(res==='drew'){o.d++;o.drew.push(team);} else {o.l++;o.lost.push(team);}
+    });
+  });
+  const arr=Object.keys(per).map(pid=>Object.assign({pid,name:(playerById(pid)||{}).name||'?'},per[pid]));
+  if(!arr.length) return '';
+  arr.sort((a,b)=> b.pts-a.pts || b.w-a.w || b.gd-a.gd || a.l-b.l);
+  const top=arr[0], bottom=arr[arr.length-1];
+  const bigDay=(top.w>=2||top.pts>=4); const lead=bigDay?'had a big day':'led the day';
+  let s='';
+  if(top.pts===0){ s=`A bruising day across the board — no owner came away with a win.`; }
+  else if(top.w>0){ s=`<strong>${esc(top.name)}</strong> ${lead} with ${top.w} ${top.w===1?'win':'wins'} from ${joinNames(top.won.map(esc))}`; if(top.d===1) s+=` and a draw`; else if(top.d>1) s+=` and ${top.d} draws`; s+='.'; }
+  else{ s=`<strong>${esc(top.name)}</strong> ${lead} with ${top.d} ${top.d===1?'draw':'draws'} for ${top.pts} ${top.pts===1?'point':'points'}.`; }
+  if(top.pts>0 && bottom.pid!==top.pid && bottom.l>0 && bottom.pts<top.pts){
+    const allLost=(bottom.w===0&&bottom.d===0); let desc;
+    if(allLost&&bottom.l===2) desc='losing both';
+    else if(allLost&&bottom.l>=3) desc='losing all '+bottom.l;
+    else desc=`with ${bottom.l} ${bottom.l===1?'loss':'losses'}`;
+    s=s.replace(/\.$/,'')+` whilst <strong>${esc(bottom.name)}</strong> struggled, ${desc}.`;
+  }
+  return `<div class="day-review"><div class="dr-h">📊 Day in review · ${fmtDateLong(day)}</div><p class="dr-body">${s}</p></div>`;
+}
 function viewLeaderboard(){
   const head=`<div class="lb-head"><h2>Leaderboard</h2>${lbControls()}</div>`;
   if(!draftComplete()){
@@ -1177,9 +1231,10 @@ function viewLeaderboard(){
       <button class="btn primary" data-action="tab" data-tab="draft">Go to draft</button></div>`;
   }
   const lb=leaderboard();
-  if(state.lbView==='table') return head+legend()+lbTable(lb);
+  const dr=draftComplete()?daySummary():'';
+  if(state.lbView==='table') return head+dr+legend()+lbTable(lb);
   const medals=["🥇","🥈","🥉"];
-  let html=head+legend();
+  let html=head+dr+legend();
   lb.forEach((ps,idx)=>{
     const p=playerById(ps.id), open=expandedPid===ps.id;
     const teams=ps.teams.slice().sort((a,b)=>{
@@ -1206,7 +1261,9 @@ function viewLeaderboard(){
 /* ---------- RESULTS TAB ---------- */
 function renderMatch(m,opts={}){
   const played=isPlayed(m);
-  const today = m.date===TODAY;
+  const _ap=aestParts(m);
+  const _adate=_ap?_ap.dateKey:m.date;
+  const today = _adate===TODAY;
   const showOwners = !opts.hideOwners;
   const venue = opts.showVenue && m.venue ? ' · '+esc(m.venue.split(',')[0]) : '';
   let center, hb="", ab="";
@@ -1220,11 +1277,12 @@ function renderMatch(m,opts={}){
     center=`<div class="score tbd">${opts.timeLabel || m.localTime || 'TBD'}</div>`;
   }
   const editBtn = admin ? `<button class="btn sm" data-action="edit-match" data-id="${m.id}">${played?'Edit':'+ Score'}</button>` : '';
-  const dateBit = opts.hideDateInMeta ? '' : ' · '+fmtDate(m.date);
+  const dateBit = opts.hideDateInMeta ? '' : ' · '+fmtDate(_adate);
+  const timeBit = opts.aestTime ? ' · '+opts.aestTime : '';
   const todayBit = (!opts.hideDateInMeta && today) ? ' <span class="today-badge">TODAY</span>' : '';
   return `<div class="match">
     <div class="match-meta">
-      <span class="mm-info">Group ${m.group} · MD${m.matchday}${dateBit}${venue}${todayBit}</span>
+      <span class="mm-info">Group ${m.group} · MD${m.matchday}${dateBit}${timeBit}${venue}${todayBit}</span>
       ${editBtn}
     </div>
     <div class="match-main">
@@ -1246,18 +1304,24 @@ function fmtDate(d){
   return `${da} ${months[mo-1]}`;
 }
 function viewResults(){
-  // most recent first; a "Cup begins" divider sits at the MD2→MD1 boundary (pre-cup results sit below it)
-  const played=effMatches().filter(isPlayed).sort((a,b)=> a.date>b.date?-1:(a.date<b.date?1:((a.localTime||'')>(b.localTime||'')?-1:1)));
+  // most recent first (AEST); a "Cup begins" divider sits at the MD2→MD1 boundary (pre-cup results sit below it)
+  const played=effMatches().filter(isPlayed).map(m=>({m,a:aestParts(m)}))
+    .sort((x,y)=>{
+      const xm=x.a?x.a.ms:Date.parse((x.m.date||'')+'T'+(x.m.localTime||'00:00')+':00Z');
+      const ym=y.a?y.a.ms:Date.parse((y.m.date||'')+'T'+(y.m.localTime||'00:00')+':00Z');
+      return ym-xm;
+    });
   if(!played.length) return `<div class="empty"><div class="big">📋</div><h3>No results yet</h3><p>Played matches appear here, most recent first.</p></div>`;
-  let html=`<div class="section-head" style="margin-top:6px"><h2>Results</h2><span class="sub">${played.length} matches played · most recent first</span></div>`;
+  let html=`<div class="section-head" style="margin-top:6px"><h2>Results</h2><span class="sub">${played.length} matches played · most recent first · times in AEST</span></div>`;
   let lastDate=null, dividerShown=false;
-  played.forEach(m=>{
+  played.forEach(({m,a})=>{
     if(!dividerShown && m.matchday<SCORE_FROM){
       html+=`<div class="cupbegins"><span>⚽ Cup begins · pre-cup results below</span></div>`;
       dividerShown=true; lastDate=null;
     }
-    if(m.date!==lastDate){ html+=`<div class="daygroup">${fmtDateLong(m.date)}</div>`; lastDate=m.date; }
-    html+=renderMatch(m,{hideOwners:m.matchday<SCORE_FROM});
+    const key=a?a.dateKey:m.date;
+    if(key!==lastDate){ html+=`<div class="daygroup">${fmtDateLong(key)}</div>`; lastDate=key; }
+    html+=renderMatch(m,{hideOwners:m.matchday<SCORE_FROM, aestTime:a?a.timeStr:null});
   });
   return html;
 }
