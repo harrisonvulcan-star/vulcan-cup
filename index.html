@@ -1183,6 +1183,16 @@ function lastResultsDayKey(){
   });
   return best;
 }
+function nextMatchDayKey(afterKey){
+  let best=null;
+  effMatches().forEach(m=>{
+    if(isPlayed(m)) return;
+    const a=aestParts(m); const key=a?a.dateKey:m.date;
+    if(afterKey && key<=afterKey) return;
+    if(best===null||key<best) best=key;
+  });
+  return best;
+}
 function joinNames(arr){
   if(arr.length<=1) return arr[0]||'';
   if(arr.length===2) return arr[0]+' and '+arr[1];
@@ -1191,12 +1201,13 @@ function joinNames(arr){
 function daySummary(){
   const day=lastResultsDayKey();
   if(!day) return '';
-  const per={};
+  const per={}; const dayMatches=[];
   effMatches().forEach(m=>{
     if(!isPlayed(m)) return;
     if(!(m.matchday==null||m.matchday>=SCORE_FROM)) return;
     const a=aestParts(m); const key=a?a.dateKey:m.date;
     if(key!==day) return;
+    dayMatches.push(m);
     [[m.home,m.homeScore,m.awayScore],[m.away,m.awayScore,m.homeScore]].forEach(([team,gf,ga])=>{
       const pid=ownerOf(team); if(!pid) return;
       const res=gf>ga?'won':(gf===ga?'drew':'lost');
@@ -1206,22 +1217,55 @@ function daySummary(){
     });
   });
   const arr=Object.keys(per).map(pid=>Object.assign({pid,name:(playerById(pid)||{}).name||'?'},per[pid]));
-  if(!arr.length) return '';
-  arr.sort((a,b)=> b.pts-a.pts || b.w-a.w || b.gd-a.gd || a.l-b.l);
-  const top=arr[0], bottom=arr[arr.length-1];
-  const bigDay=(top.w>=2||top.pts>=4); const lead=bigDay?'had a big day':'led the day';
-  let s='';
-  if(top.pts===0){ s=`A bruising day across the board — no owner came away with a win.`; }
-  else if(top.w>0){ s=`<strong>${esc(top.name)}</strong> ${lead} with ${top.w} ${top.w===1?'win':'wins'} from ${joinNames(top.won.map(esc))}`; if(top.d===1) s+=` and a draw`; else if(top.d>1) s+=` and ${top.d} draws`; s+='.'; }
-  else{ s=`<strong>${esc(top.name)}</strong> ${lead} with ${top.d} ${top.d===1?'draw':'draws'} for ${top.pts} ${top.pts===1?'point':'points'}.`; }
-  if(top.pts>0 && bottom.pid!==top.pid && bottom.l>0 && bottom.pts<top.pts){
-    const allLost=(bottom.w===0&&bottom.d===0); let desc;
-    if(allLost&&bottom.l===2) desc='losing both';
-    else if(allLost&&bottom.l>=3) desc='losing all '+bottom.l;
-    else desc=`with ${bottom.l} ${bottom.l===1?'loss':'losses'}`;
-    s=s.replace(/\.$/,'')+` whilst <strong>${esc(bottom.name)}</strong> struggled, ${desc}.`;
+  const parts=[];
+  if(arr.length){
+    arr.sort((a,b)=> b.pts-a.pts || b.w-a.w || b.gd-a.gd || a.l-b.l);
+    const top=arr[0], bottom=arr[arr.length-1];
+    const bigDay=(top.w>=2||top.pts>=4); const lead=bigDay?'had a big day':'led the day';
+    let s='';
+    if(top.pts===0){ s=`A bruising day across the board — no owner came away with a win`; }
+    else if(top.w>0){ s=`<strong>${esc(top.name)}</strong> ${lead} with ${top.w} ${top.w===1?'win':'wins'} from ${joinNames(top.won.map(esc))}`; if(top.d===1) s+=` and a draw`; else if(top.d>1) s+=` and ${top.d} draws`; }
+    else{ s=`<strong>${esc(top.name)}</strong> ${lead} with ${top.d} ${top.d===1?'draw':'draws'} for ${top.pts} ${top.pts===1?'point':'points'}`; }
+    if(top.pts>0 && bottom.pid!==top.pid && bottom.l>0 && bottom.pts<top.pts){
+      const allLost=(bottom.w===0&&bottom.d===0); let desc;
+      if(allLost&&bottom.l===2) desc='losing both';
+      else if(allLost&&bottom.l>=3) desc='losing all '+bottom.l;
+      else desc=`with ${bottom.l} ${bottom.l===1?'loss':'losses'}`;
+      s+=`, whilst <strong>${esc(bottom.name)}</strong> struggled, ${desc}`;
+    }
+    parts.push(s+'.');
   }
-  return `<div class="day-review"><div class="dr-h">📊 Day in review · ${fmtDateLong(day)}</div><p class="dr-body">${s}</p></div>`;
+  const decisive=dayMatches.filter(m=>m.homeScore!==m.awayScore);
+  if(decisive.length){
+    decisive.sort((a,b)=>{ const ma=Math.abs(a.homeScore-a.awayScore), mb=Math.abs(b.homeScore-b.awayScore); return mb-ma || (b.homeScore+b.awayScore)-(a.homeScore+a.awayScore); });
+    const m=decisive[0];
+    const winner=m.homeScore>m.awayScore?m.home:m.away;
+    const loser=m.homeScore>m.awayScore?m.away:m.home;
+    const ws=Math.max(m.homeScore,m.awayScore), ls=Math.min(m.homeScore,m.awayScore);
+    const wo=playerById(ownerOf(winner)); const own=wo?` for <strong>${esc(wo.name)}</strong>`:'';
+    parts.push(`Pick of the day: ${esc(winner)}'s ${ws}–${ls} win over ${esc(loser)}${own}.`);
+  }
+  const next=nextMatchDayKey(day);
+  if(next){
+    const games=effMatches().filter(m=>{ if(isPlayed(m)) return false; const a=aestParts(m); return (a?a.dateKey:m.date)===next; }).map(m=>({m,a:aestParts(m)})).sort((x,y)=>(x.a?x.a.ms:0)-(y.a?y.a.ms:0));
+    if(games.length){
+      const ranked=games.slice().sort((x,y)=>(Math.min(rank(x.m.home)||999,rank(x.m.away)||999))-(Math.min(rank(y.m.home)||999,rank(y.m.away)||999)));
+      const ho=t=>{const p=playerById(ownerOf(t));return p?`<strong>${esc(p.name)}</strong>`:'unowned';};
+      const fixture=g=>`${esc(g.m.home)} v ${esc(g.m.away)} (${ho(g.m.home)} v ${ho(g.m.away)})`;
+      const first=games[0].a?games[0].a.timeStr:games[0].m.localTime;
+      const dt=new Date(day+'T00:00:00Z'), nd=new Date(next+'T00:00:00Z'); const dayLabel=(nd-dt===86400000)?'tomorrow':fmtDateLong(next);
+      let look=`Coming up ${dayLabel}: ${games.length} ${games.length===1?'match':'matches'}. Headline fixture: ${fixture(ranked[0])}`;
+      if(ranked.length>1) look+=`, with ${fixture(ranked[1])} also on the card`;
+      look+=`. First kickoff ${first} AEST.`;
+      const cnt={};
+      games.forEach(g=>{[g.m.home,g.m.away].forEach(t=>{const pid=ownerOf(t);if(!pid)return;(cnt[pid]=cnt[pid]||{n:0,teams:[]});cnt[pid].n++;cnt[pid].teams.push(t);});});
+      const multi=Object.keys(cnt).filter(pid=>cnt[pid].n>=2).map(pid=>({name:(playerById(pid)||{}).name||'?',n:cnt[pid].n,teams:cnt[pid].teams})).sort((a,b)=>b.n-a.n);
+      if(multi.length){const t=multi[0];look+=` <strong>${esc(t.name)}</strong> has the most riding on the day with ${t.n} teams out (${joinNames(t.teams.map(esc))}).`;}
+      parts.push(look);
+    }
+  }
+  if(!parts.length) return '';
+  return `<div class="day-review"><div class="dr-h">\U0001F4CA Day in review · ${fmtDateLong(day)}</div><p class="dr-body">${parts.join(' ')}</p></div>`;
 }
 function viewLeaderboard(){
   const head=`<div class="lb-head"><h2>Leaderboard</h2>${lbControls()}</div>`;
