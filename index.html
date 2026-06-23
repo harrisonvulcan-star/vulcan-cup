@@ -376,10 +376,6 @@
     .gtable .own{font-size:9px;padding:1px 5px;margin-left:4px} .gtable .tcode{font-size:9px}
     .foot{padding:16px 11px 36px}
   }
-  .day-review{background:linear-gradient(135deg,#ffffff,var(--cream-2));border:1px solid var(--gold-soft);border-left:4px solid var(--gold);border-radius:12px;padding:12px 16px;margin:6px 2px 16px}
-  .day-review .dr-h{font-family:var(--display);font-weight:800;font-size:12.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--pitch-dark);margin-bottom:5px}
-  .day-review .dr-body{margin:0;font-size:14px;line-height:1.5;color:var(--ink)}
-  .day-review .dr-body strong{color:var(--pitch-dark);font-weight:700}
 </style>
 </head>
 <body>
@@ -417,7 +413,7 @@
 
 /* ---------- EMBEDDED TOURNAMENT DATA (real 2026 WC) ---------- */
 const DATA = {
-  "asOf": "2026-06-22",
+  "asOf": "2026-06-23",
   "groups": {
     "A": ["Mexico", "South Korea", "Czechia", "South Africa"],
     "B": ["Switzerland", "Canada", "Qatar", "Bosnia and Herzegovina"],
@@ -517,15 +513,15 @@ const DATA = {
 
     {"matchday":1,"group":"I","date":"2026-06-16","localTime":"15:00","venue":"MetLife Stadium, East Rutherford","home":"France","away":"Senegal","homeScore":3,"awayScore":1,"status":"played"},
     {"matchday":1,"group":"I","date":"2026-06-16","localTime":"18:00","venue":"Gillette Stadium, Foxborough","home":"Iraq","away":"Norway","homeScore":1,"awayScore":4,"status":"played"},
-    {"matchday":2,"group":"I","date":"2026-06-22","localTime":"17:00","venue":"Lincoln Financial Field, Philadelphia","home":"France","away":"Iraq","homeScore":null,"awayScore":null,"status":"upcoming"},
-    {"matchday":2,"group":"I","date":"2026-06-22","localTime":"20:00","venue":"MetLife Stadium, East Rutherford","home":"Norway","away":"Senegal","homeScore":null,"awayScore":null,"status":"upcoming"},
+    {"matchday":2,"group":"I","date":"2026-06-22","localTime":"17:00","venue":"Lincoln Financial Field, Philadelphia","home":"France","away":"Iraq","homeScore":3,"awayScore":0,"status":"played"},
+    {"matchday":2,"group":"I","date":"2026-06-22","localTime":"20:00","venue":"MetLife Stadium, East Rutherford","home":"Norway","away":"Senegal","homeScore":3,"awayScore":2,"status":"played"},
     {"matchday":3,"group":"I","date":"2026-06-26","localTime":"15:00","venue":"Gillette Stadium, Foxborough","home":"Norway","away":"France","homeScore":null,"awayScore":null,"status":"upcoming"},
     {"matchday":3,"group":"I","date":"2026-06-26","localTime":"15:00","venue":"BMO Field, Toronto","home":"Senegal","away":"Iraq","homeScore":null,"awayScore":null,"status":"upcoming"},
 
     {"matchday":1,"group":"J","date":"2026-06-16","localTime":"20:00","venue":"Arrowhead Stadium, Kansas City","home":"Argentina","away":"Algeria","homeScore":3,"awayScore":0,"status":"played"},
     {"matchday":1,"group":"J","date":"2026-06-16","localTime":"21:00","venue":"Levi's Stadium, Santa Clara","home":"Austria","away":"Jordan","homeScore":3,"awayScore":1,"status":"played"},
-    {"matchday":2,"group":"J","date":"2026-06-22","localTime":"12:00","venue":"AT&T Stadium, Arlington","home":"Argentina","away":"Austria","homeScore":null,"awayScore":null,"status":"upcoming"},
-    {"matchday":2,"group":"J","date":"2026-06-22","localTime":"20:00","venue":"Levi's Stadium, Santa Clara","home":"Jordan","away":"Algeria","homeScore":null,"awayScore":null,"status":"upcoming"},
+    {"matchday":2,"group":"J","date":"2026-06-22","localTime":"12:00","venue":"AT&T Stadium, Arlington","home":"Argentina","away":"Austria","homeScore":2,"awayScore":0,"status":"played"},
+    {"matchday":2,"group":"J","date":"2026-06-22","localTime":"20:00","venue":"Levi's Stadium, Santa Clara","home":"Jordan","away":"Algeria","homeScore":1,"awayScore":2,"status":"played"},
     {"matchday":3,"group":"J","date":"2026-06-27","localTime":"21:00","venue":"Arrowhead Stadium, Kansas City","home":"Algeria","away":"Austria","homeScore":null,"awayScore":null,"status":"upcoming"},
     {"matchday":3,"group":"J","date":"2026-06-27","localTime":"21:00","venue":"AT&T Stadium, Arlington","home":"Jordan","away":"Argentina","homeScore":null,"awayScore":null,"status":"upcoming"},
 
@@ -1173,115 +1169,6 @@ function lbTable(lb){
     `<th>#</th><th style="text-align:left">Player</th><th>GP</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th>`+
     `</tr></thead><tbody>${rows}</tbody></table></div>`;
 }
-function lastResultsDayKey(){
-  let best=null;
-  effMatches().forEach(m=>{
-    if(!isPlayed(m)) return;
-    if(!(m.matchday==null||m.matchday>=SCORE_FROM)) return;
-    const a=aestParts(m); const key=a?a.dateKey:m.date;
-    if(best===null||key>best) best=key;
-  });
-  return best;
-}
-function nextMatchDayKey(afterKey){
-  let best=null;
-  effMatches().forEach(m=>{
-    if(isPlayed(m)) return;
-    const a=aestParts(m); const key=a?a.dateKey:m.date;
-    if(afterKey && key<=afterKey) return;
-    if(best===null||key<best) best=key;
-  });
-  return best;
-}
-function joinNames(arr){
-  if(arr.length<=1) return arr[0]||'';
-  if(arr.length===2) return arr[0]+' and '+arr[1];
-  return arr.slice(0,-1).join(', ')+' and '+arr[arr.length-1];
-}
-function daySummary(){
-  const day=lastResultsDayKey();
-  if(!day) return '';
-  const per={}; const dayMatches=[];
-  effMatches().forEach(m=>{
-    if(!isPlayed(m)) return;
-    if(!(m.matchday==null||m.matchday>=SCORE_FROM)) return;
-    const a=aestParts(m); const key=a?a.dateKey:m.date;
-    if(key!==day) return;
-    dayMatches.push(m);
-    [[m.home,m.homeScore,m.awayScore],[m.away,m.awayScore,m.homeScore]].forEach(([team,gf,ga])=>{
-      const pid=ownerOf(team); if(!pid) return;
-      const res=gf>ga?'won':(gf===ga?'drew':'lost');
-      const o=per[pid]||(per[pid]={pts:0,w:0,d:0,l:0,gd:0,won:[],drew:[],lost:[]});
-      o.pts+=(res==='won'?3:res==='drew'?1:0); o.gd+=(gf-ga);
-      if(res==='won'){o.w++;o.won.push(team);} else if(res==='drew'){o.d++;o.drew.push(team);} else {o.l++;o.lost.push(team);}
-    });
-  });
-  const arr=Object.keys(per).map(pid=>Object.assign({pid,name:(playerById(pid)||{}).name||'?'},per[pid]));
-  const parts=[];
-  if(arr.length){
-    arr.sort((a,b)=> b.pts-a.pts || b.w-a.w || b.gd-a.gd || a.l-b.l);
-    const top=arr[0], bottom=arr[arr.length-1];
-    const bigDay=(top.w>=2||top.pts>=4); const lead=bigDay?'had a big day':'led the day';
-    let s='';
-    if(top.pts===0){ s=`A bruising day across the board — no owner came away with a win`; }
-    else if(top.w>0){ s=`<strong>${esc(top.name)}</strong> ${lead} with ${top.w} ${top.w===1?'win':'wins'} from ${joinNames(top.won.map(esc))}`; if(top.d===1) s+=` and a draw`; else if(top.d>1) s+=` and ${top.d} draws`; }
-    else{ s=`<strong>${esc(top.name)}</strong> ${lead} with ${top.d} ${top.d===1?'draw':'draws'} for ${top.pts} ${top.pts===1?'point':'points'}`; }
-    if(top.pts>0 && bottom.pid!==top.pid && bottom.l>0 && bottom.pts<top.pts){
-      const allLost=(bottom.w===0&&bottom.d===0); let desc;
-      if(allLost&&bottom.l===2) desc='losing both';
-      else if(allLost&&bottom.l>=3) desc='losing all '+bottom.l;
-      else desc=`with ${bottom.l} ${bottom.l===1?'loss':'losses'}`;
-      s+=`, whilst <strong>${esc(bottom.name)}</strong> struggled, ${desc}`;
-    }
-    parts.push(s+'.');
-  }
-  const decisive=dayMatches.filter(m=>m.homeScore!==m.awayScore);
-  if(decisive.length){
-    decisive.sort((a,b)=>{ const ma=Math.abs(a.homeScore-a.awayScore), mb=Math.abs(b.homeScore-b.awayScore); return mb-ma || (b.homeScore+b.awayScore)-(a.homeScore+a.awayScore); });
-    const m=decisive[0];
-    const winner=m.homeScore>m.awayScore?m.home:m.away;
-    const loser=m.homeScore>m.awayScore?m.away:m.home;
-    const ws=Math.max(m.homeScore,m.awayScore), ls=Math.min(m.homeScore,m.awayScore);
-    const wo=playerById(ownerOf(winner)); const own=wo?` for <strong>${esc(wo.name)}</strong>`:'';
-    parts.push(`Pick of the day: ${esc(winner)}'s ${ws}–${ls} win over ${esc(loser)}${own}.`);
-  }
-  const ordinal=n=>{const s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);};
-  const notables=[];
-  dayMatches.forEach(m=>{
-    const rh=rank(m.home), ra=rank(m.away);
-    if(rh==null||ra==null) return;
-    const draw=m.homeScore===m.awayScore;
-    const favHome=rh<ra;
-    const underdog=favHome?m.away:m.home, favorite=favHome?m.home:m.away;
-    const udRank=favHome?ra:rh, favRank=favHome?rh:ra, gap=udRank-favRank;
-    const underdogWon=draw?false:(favHome?m.awayScore>m.homeScore:m.homeScore>m.awayScore);
-    const oU=playerById(ownerOf(underdog)); const ownU=oU?esc(oU.name):'unowned';
-    const oF=playerById(ownerOf(favorite)); const ownF=oF?esc(oF.name):'unowned';
-    if(underdogWon && gap>=15){ notables.push({gap,text:`${esc(underdog)} (${ordinal(udRank)}, <strong>${ownU}</strong>) stunned ${esc(favorite)} (${ordinal(favRank)}, <strong>${ownF}</strong>) ${Math.max(m.homeScore,m.awayScore)}\u2013${Math.min(m.homeScore,m.awayScore)}`}); }
-    else if(draw && gap>=20){ notables.push({gap,text:`${esc(underdog)} (${ordinal(udRank)}, <strong>${ownU}</strong>) held ${esc(favorite)} (${ordinal(favRank)}, <strong>${ownF}</strong>) to a ${m.homeScore}\u2013${m.awayScore} draw`}); }
-  });
-  if(notables.length){ notables.sort((a,b)=>b.gap-a.gap); parts.push(`Surprise of the day: ${notables.slice(0,2).map(n=>n.text).join('; ')}.`); }
-  const next=nextMatchDayKey(day);
-  if(next){
-    const games=effMatches().filter(m=>{ if(isPlayed(m)) return false; const a=aestParts(m); return (a?a.dateKey:m.date)===next; }).map(m=>({m,a:aestParts(m)})).sort((x,y)=>(x.a?x.a.ms:0)-(y.a?y.a.ms:0));
-    if(games.length){
-      const ranked=games.slice().sort((x,y)=>(Math.min(rank(x.m.home)||999,rank(x.m.away)||999))-(Math.min(rank(y.m.home)||999,rank(y.m.away)||999)));
-      const ho=t=>{const p=playerById(ownerOf(t));return p?`<strong>${esc(p.name)}</strong>`:'unowned';};
-      const fixture=g=>`${esc(g.m.home)} v ${esc(g.m.away)} (${ho(g.m.home)} v ${ho(g.m.away)})`;
-      const dt=new Date(day+'T00:00:00Z'), nd=new Date(next+'T00:00:00Z'); const dayLabel=(nd-dt===86400000)?'tomorrow':fmtDateLong(next);
-      let look=`Coming up ${dayLabel}: ${games.length} ${games.length===1?'match':'matches'}. Headline fixture: ${fixture(ranked[0])}`;
-      if(ranked.length>1) look+=`, with ${fixture(ranked[1])} also on the card`;
-      look+=`.`;
-      const cnt={};
-      games.forEach(g=>{[g.m.home,g.m.away].forEach(t=>{const pid=ownerOf(t);if(!pid)return;(cnt[pid]=cnt[pid]||{n:0,teams:[]});cnt[pid].n++;cnt[pid].teams.push(t);});});
-      const multi=Object.keys(cnt).filter(pid=>cnt[pid].n>=2).map(pid=>({name:(playerById(pid)||{}).name||'?',n:cnt[pid].n,teams:cnt[pid].teams})).sort((a,b)=>b.n-a.n);
-      if(multi.length){const t=multi[0];look+=` <strong>${esc(t.name)}</strong> has the most riding on the day with ${t.n} teams out (${joinNames(t.teams.map(esc))}).`;}
-      parts.push(look);
-    }
-  }
-  if(!parts.length) return '';
-  return `<div class="day-review"><div class="dr-h">📊 Day in review · ${fmtDateLong(day)}</div><p class="dr-body">${parts.join(' ')}</p></div>`;
-}
 function viewLeaderboard(){
   const head=`<div class="lb-head"><h2>Leaderboard</h2>${lbControls()}</div>`;
   if(!draftComplete()){
@@ -1290,10 +1177,9 @@ function viewLeaderboard(){
       <button class="btn primary" data-action="tab" data-tab="draft">Go to draft</button></div>`;
   }
   const lb=leaderboard();
-  const dr=draftComplete()?daySummary():'';
-  if(state.lbView==='table') return head+dr+legend()+lbTable(lb);
+  if(state.lbView==='table') return head+legend()+lbTable(lb);
   const medals=["🥇","🥈","🥉"];
-  let html=head+dr+legend();
+  let html=head+legend();
   lb.forEach((ps,idx)=>{
     const p=playerById(ps.id), open=expandedPid===ps.id;
     const teams=ps.teams.slice().sort((a,b)=>{
@@ -1320,9 +1206,7 @@ function viewLeaderboard(){
 /* ---------- RESULTS TAB ---------- */
 function renderMatch(m,opts={}){
   const played=isPlayed(m);
-  const _ap=aestParts(m);
-  const _adate=_ap?_ap.dateKey:m.date;
-  const today = _adate===TODAY;
+  const today = m.date===TODAY;
   const showOwners = !opts.hideOwners;
   const venue = opts.showVenue && m.venue ? ' · '+esc(m.venue.split(',')[0]) : '';
   let center, hb="", ab="";
@@ -1336,12 +1220,11 @@ function renderMatch(m,opts={}){
     center=`<div class="score tbd">${opts.timeLabel || m.localTime || 'TBD'}</div>`;
   }
   const editBtn = admin ? `<button class="btn sm" data-action="edit-match" data-id="${m.id}">${played?'Edit':'+ Score'}</button>` : '';
-  const dateBit = opts.hideDateInMeta ? '' : ' · '+fmtDate(_adate);
-  const timeBit = opts.aestTime ? ' · '+opts.aestTime : '';
+  const dateBit = opts.hideDateInMeta ? '' : ' · '+fmtDate(m.date);
   const todayBit = (!opts.hideDateInMeta && today) ? ' <span class="today-badge">TODAY</span>' : '';
   return `<div class="match">
     <div class="match-meta">
-      <span class="mm-info">Group ${m.group} · MD${m.matchday}${dateBit}${timeBit}${venue}${todayBit}</span>
+      <span class="mm-info">Group ${m.group} · MD${m.matchday}${dateBit}${venue}${todayBit}</span>
       ${editBtn}
     </div>
     <div class="match-main">
@@ -1363,24 +1246,18 @@ function fmtDate(d){
   return `${da} ${months[mo-1]}`;
 }
 function viewResults(){
-  // most recent first (AEST); a "Cup begins" divider sits at the MD2→MD1 boundary (pre-cup results sit below it)
-  const played=effMatches().filter(isPlayed).map(m=>({m,a:aestParts(m)}))
-    .sort((x,y)=>{
-      const xm=x.a?x.a.ms:Date.parse((x.m.date||'')+'T'+(x.m.localTime||'00:00')+':00Z');
-      const ym=y.a?y.a.ms:Date.parse((y.m.date||'')+'T'+(y.m.localTime||'00:00')+':00Z');
-      return ym-xm;
-    });
+  // most recent first; a "Cup begins" divider sits at the MD2→MD1 boundary (pre-cup results sit below it)
+  const played=effMatches().filter(isPlayed).sort((a,b)=> a.date>b.date?-1:(a.date<b.date?1:((a.localTime||'')>(b.localTime||'')?-1:1)));
   if(!played.length) return `<div class="empty"><div class="big">📋</div><h3>No results yet</h3><p>Played matches appear here, most recent first.</p></div>`;
-  let html=`<div class="section-head" style="margin-top:6px"><h2>Results</h2><span class="sub">${played.length} matches played · most recent first · times in AEST</span></div>`;
+  let html=`<div class="section-head" style="margin-top:6px"><h2>Results</h2><span class="sub">${played.length} matches played · most recent first</span></div>`;
   let lastDate=null, dividerShown=false;
-  played.forEach(({m,a})=>{
+  played.forEach(m=>{
     if(!dividerShown && m.matchday<SCORE_FROM){
       html+=`<div class="cupbegins"><span>⚽ Cup begins · pre-cup results below</span></div>`;
       dividerShown=true; lastDate=null;
     }
-    const key=a?a.dateKey:m.date;
-    if(key!==lastDate){ html+=`<div class="daygroup">${fmtDateLong(key)}</div>`; lastDate=key; }
-    html+=renderMatch(m,{hideOwners:m.matchday<SCORE_FROM, aestTime:a?a.timeStr:null});
+    if(m.date!==lastDate){ html+=`<div class="daygroup">${fmtDateLong(m.date)}</div>`; lastDate=m.date; }
+    html+=renderMatch(m,{hideOwners:m.matchday<SCORE_FROM});
   });
   return html;
 }
