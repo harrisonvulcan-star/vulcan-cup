@@ -335,6 +335,20 @@
   .bk-s{font-family:var(--mono);font-weight:800;margin-left:auto;font-size:12px}
   .bk-pen{font-size:9.5px;color:var(--muted);border-top:1px solid var(--line);margin-top:3px;padding-top:3px}
   @media(max-width:560px){.bk-round{min-width:164px}}
+  /* ---------- TITLE-RACE PROJECTION ---------- */
+  .proj{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:4px 0 16px}
+  .proj-h{font-family:var(--display);font-weight:700;font-size:14px;margin-bottom:11px}
+  .proj-h span{font-weight:500;color:var(--muted);font-size:11px}
+  .proj-row{display:grid;grid-template-columns:120px 46px 1fr 62px;align-items:center;gap:11px;padding:4px 0;font-size:13px}
+  .proj-row.lead .proj-name,.proj-row.lead .proj-win{color:var(--pitch-dark)}
+  .proj-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .proj-win{font-family:var(--display);font-weight:800;text-align:right}
+  .proj-track{position:relative;height:13px;background:var(--cream-2);border-radius:999px}
+  .proj-range{position:absolute;top:0;height:100%;border-radius:999px;min-width:4px}
+  .proj-mean{position:absolute;top:-2px;width:3px;height:17px;background:var(--pitch-dark);border-radius:2px;transform:translateX(-1px)}
+  .proj-pts{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right}
+  .proj-foot{font-size:10.5px;color:var(--muted);margin-top:9px;border-top:1px solid var(--line);padding-top:8px}
+  @media(max-width:560px){.proj-row{grid-template-columns:88px 38px 1fr 52px;gap:7px;font-size:12px}}
   @media(max-width:900px){.qual-grid{grid-template-columns:1fr 1fr}}
   @media(max-width:560px){.intel-strip{grid-template-columns:repeat(2,1fr)} .qual-grid{grid-template-columns:1fr}}
 
@@ -1400,6 +1414,83 @@ function daySummary(){
   if(!parts.length) return '';
   return `<div class="day-review"><div class="dr-h">📊 Day in review · ${fmtDateLong(day)}</div><p class="dr-body">${parts.join(' ')}</p></div>`;
 }
+/* ---------- TITLE-RACE PROJECTION (Monte Carlo) ---------- */
+let _projCache=null,_projKey=null;
+// Simulate remaining group games + the whole knockout bracket N times from current results,
+// modelling each match from FIFA ranking; returns each player's projected final points.
+function projectStandings(N){
+  N=N||2000;
+  const SCALE=40, players=state.players;
+  const rk=t=>rank(t)||80;
+  const pw=(a,b)=>1/(1+Math.pow(10,(rk(a)-rk(b))/SCALE));
+  const base={}; players.forEach(p=>base[p.id]=playerStats(p.id).pts);   // points already banked (group + KO)
+  const playedRec={}; ALL_TEAMS.forEach(t=>playedRec[t]=[0,0]);
+  effMatches().forEach(m=>{ if(!isPlayed(m))return; const h=m.home,a=m.away,hs=m.homeScore,as_=m.awayScore;
+    playedRec[h][0]+=hs>as_?3:hs===as_?1:0; playedRec[h][1]+=hs-as_;
+    playedRec[a][0]+=as_>hs?3:as_===hs?1:0; playedRec[a][1]+=as_-hs; });
+  const unplayedG=effMatches().filter(m=>!isPlayed(m));
+  const koAll=resolveKnockout();
+  const koPlayedAdv={}; koAll.forEach(m=>{ if(isPlayed(m)) koPlayedAdv[m.m]=koAdvancer(m); });
+  const koPlayed=new Set(koAll.filter(isPlayed).map(m=>m.m));
+  const koDefs=(DATA.knockout||[]).slice().sort((x,y)=>x.m-y.m);
+  const agg={},wins={}; players.forEach(p=>{agg[p.id]=[];wins[p.id]=0;});
+  for(let it=0; it<N; it++){
+    const pts=Object.assign({},base);
+    const rec={}; ALL_TEAMS.forEach(t=>rec[t]=[playedRec[t][0],playedRec[t][1]]);
+    unplayedG.forEach(m=>{ const h=m.home,a=m.away,r=Math.random(),ph=pw(h,a); let hs,as_;
+      if(r<0.26){hs=1;as_=1;} else if(r<0.26+(1-0.26)*ph){hs=1;as_=0;} else {hs=0;as_=1;}
+      rec[h][0]+=hs>as_?3:hs===as_?1:0; rec[h][1]+=hs-as_;
+      rec[a][0]+=as_>hs?3:as_===hs?1:0; rec[a][1]+=as_-hs;
+      if(m.matchday==null||m.matchday>=SCORE_FROM){ [[h,hs,as_],[a,as_,hs]].forEach(p=>{const o=ownerOf(p[0]); if(o)pts[o]+=p[1]>p[2]?3:p[1]===p[2]?1:0;}); }
+    });
+    const win={},run={},thirds=[];
+    GROUP_LETTERS.forEach(g=>{ const st=DATA.groups[g].slice().sort((x,y)=>rec[y][0]-rec[x][0]||rec[y][1]-rec[x][1]||rk(x)-rk(y));
+      win[g]=st[0];run[g]=st[1];thirds.push([st[2],rec[st[2]][0],rec[st[2]][1]]); });
+    thirds.sort((x,y)=>y[1]-x[1]||y[2]-x[2]||rk(x[0])-rk(y[0]));
+    const tq=thirds.slice(0,8).map(x=>x[0]); let ti=0;
+    const res={},part={};
+    const slot=code=>{ if(!code)return null; if(code[0]==="3")return tq[ti++]; let mm;
+      if(/^[12][A-L]$/.test(code))return code[0]==="1"?win[code[1]]:run[code[1]];
+      if(mm=/^W(\d+)$/.exec(code))return res[+mm[1]];
+      if(mm=/^L(\d+)$/.exec(code)){const n=+mm[1],pr=part[n];return pr?(res[n]===pr[0]?pr[1]:pr[0]):null;} return null; };
+    koDefs.forEach(k=>{ const h=slot(k.homeSlot),a=slot(k.awaySlot); part[k.m]=[h,a];
+      if(koPlayed.has(k.m)){ res[k.m]=koPlayedAdv[k.m]; }   // actual result, points already in base
+      else { const w=(h&&a)?(Math.random()<pw(h,a)?h:a):(h||a); res[k.m]=w; const o=ownerOf(w); if(o)pts[o]+=3; }
+    });
+    let lead=null,best=-1;
+    players.forEach(p=>{ const v=pts[p.id]; agg[p.id].push(v); if(v>best){best=v;lead=p.id;} });
+    if(lead)wins[lead]++;
+  }
+  const pctl=(a,q)=>{a=a.slice().sort((x,y)=>x-y);return a[Math.min(a.length-1,Math.floor(q*a.length))];};
+  return players.map(p=>{const a=agg[p.id];return {id:p.id,name:p.name,now:base[p.id],
+    mean:a.reduce((s,v)=>s+v,0)/a.length, lo:pctl(a,0.1), hi:pctl(a,0.9), win:100*wins[p.id]/N};})
+    .sort((x,y)=>y.mean-x.mean||y.win-x.win);
+}
+function getProjection(){
+  const key=effMatches().filter(isPlayed).length+":"+resolveKnockout().filter(isPlayed).length+":"+state.log.length+":"+DATA.asOf;
+  if(_projKey===key && _projCache) return _projCache;
+  _projCache=projectStandings(2000); _projKey=key; return _projCache;
+}
+function projectionPanel(){
+  if(!draftComplete()) return "";
+  const rows=getProjection();
+  if(!rows.length) return "";
+  const gmin=Math.min(...rows.map(r=>r.lo)), gmax=Math.max(...rows.map(r=>r.hi)), span=Math.max(1,gmax-gmin);
+  const pos=v=>(100*(v-gmin)/span);
+  let h=`<div class="proj"><div class="proj-h">🔮 Title race <span>· chance of winning &amp; projected final points · 2,000 simulations from FIFA ranking</span></div>`;
+  rows.forEach((r,i)=>{
+    const left=pos(r.lo), width=Math.max(1.5,pos(r.hi)-pos(r.lo)), mean=pos(r.mean);
+    const hue=145, lit=72-Math.min(26,r.win*0.45);
+    h+=`<div class="proj-row${i===0?' lead':''}">
+      <span class="proj-name">${i===0?'👑 ':''}${esc(r.name)}</span>
+      <span class="proj-win">${r.win>=1?Math.round(r.win):(r.win>0.1?r.win.toFixed(1):'<0.1')}%</span>
+      <div class="proj-track"><div class="proj-range" style="left:${left}%;width:${width}%;background:hsl(${hue},42%,${lit}%)"></div><div class="proj-mean" style="left:${mean}%" title="mean ${r.mean.toFixed(1)}"></div></div>
+      <span class="proj-pts">${r.lo}–${r.hi}</span>
+    </div>`;
+  });
+  h+=`<div class="proj-foot">Bar = likely final range (10th–90th pct) · tick = average · now: ${rows.slice().sort((a,b)=>b.now-a.now).map(r=>esc(r.name.split(' ')[0])+' '+r.now).slice(0,3).join(' · ')}…</div></div>`;
+  return h;
+}
 function viewLeaderboard(){
   const head=`<div class="lb-head"><h2>Leaderboard</h2>${lbControls()}</div>`;
   if(!draftComplete()){
@@ -1409,9 +1500,10 @@ function viewLeaderboard(){
   }
   const lb=leaderboard();
   const dr=draftComplete()?daySummary():'';
-  if(state.lbView==='table') return head+dr+legend()+lbTable(lb);
+  const pr=draftComplete()?projectionPanel():'';
+  if(state.lbView==='table') return head+dr+pr+legend()+lbTable(lb);
   const medals=["🥇","🥈","🥉"];
-  let html=head+dr+legend();
+  let html=head+dr+pr+legend();
   lb.forEach((ps,idx)=>{
     const p=playerById(ps.id), open=expandedPid===ps.id;
     const teams=ps.teams.slice().sort((a,b)=>{
