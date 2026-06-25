@@ -315,6 +315,26 @@
   .sb-through{background:var(--won-b);color:var(--won-t)}
   .sb-alive{background:var(--pend-b);color:var(--pend-t)}
   .sb-out{background:var(--lost-b);color:var(--lost-t)}
+  /* ---------- KNOCKOUT / ELIMINATION ---------- */
+  .pill.out{text-decoration:line-through;opacity:.5}
+  .teamline.out{text-decoration:line-through;opacity:.55}
+  .pen-note{font-size:10px;color:var(--muted);text-align:center;margin-top:2px}
+  .bracket{display:flex;gap:14px;overflow-x:auto;padding:6px 2px 16px}
+  .bk-round{display:flex;flex-direction:column;gap:8px;min-width:184px;flex:0 0 auto}
+  .bk-rh{font-family:var(--display);font-weight:700;font-size:12px;color:var(--pitch-dark);text-transform:uppercase;letter-spacing:.03em;padding:2px 2px 4px}
+  .bk-rc{font-family:var(--mono);font-weight:600;color:var(--muted);font-size:10px}
+  .bk-match{border:1px solid var(--line);border-radius:9px;background:#fff;padding:6px 8px}
+  .bk-mh{font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bk-side{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 0}
+  .bk-side .fl{font-size:14px;flex:0 0 auto}
+  .bk-side.adv{color:var(--won-t)}
+  .bk-nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bk-nm.out{text-decoration:line-through;opacity:.5}
+  .bk-slot{color:var(--muted);font-weight:500;font-style:italic;font-size:11px}
+  .bk-own{font-size:8.5px;color:#fff;padding:0 5px;border-radius:999px;margin-left:4px;white-space:nowrap}
+  .bk-s{font-family:var(--mono);font-weight:800;margin-left:auto;font-size:12px}
+  .bk-pen{font-size:9.5px;color:var(--muted);border-top:1px solid var(--line);margin-top:3px;padding-top:3px}
+  @media(max-width:560px){.bk-round{min-width:164px}}
   @media(max-width:900px){.qual-grid{grid-template-columns:1fr 1fr}}
   @media(max-width:560px){.intel-strip{grid-template-columns:repeat(2,1fr)} .qual-grid{grid-template-columns:1fr}}
 
@@ -545,6 +565,42 @@ const DATA = {
   ]
 };
 DATA.groupMatches.forEach((m,i)=>m.id=i);
+// ---- KNOCKOUT BRACKET (slots auto-resolve from results; 3rd-place + scores filled as the tournament progresses) ----
+DATA.knockout = [
+  {"m":73,"round":"R32","date":"2026-06-28","venue":"SoFi Stadium, Inglewood","homeSlot":"2A","awaySlot":"2B"},
+  {"m":74,"round":"R32","date":"2026-06-29","venue":"Gillette Stadium, Foxborough","homeSlot":"1E","awaySlot":"3:ABCDF"},
+  {"m":75,"round":"R32","date":"2026-06-29","venue":"Estadio BBVA, Guadalupe","homeSlot":"1F","awaySlot":"2C"},
+  {"m":76,"round":"R32","date":"2026-06-29","venue":"NRG Stadium, Houston","homeSlot":"1C","awaySlot":"2F"},
+  {"m":77,"round":"R32","date":"2026-06-30","venue":"MetLife Stadium, East Rutherford","homeSlot":"1I","awaySlot":"3:CDFGH"},
+  {"m":78,"round":"R32","date":"2026-06-30","venue":"AT&T Stadium, Arlington","homeSlot":"2E","awaySlot":"2I"},
+  {"m":79,"round":"R32","date":"2026-06-30","venue":"Estadio Azteca, Mexico City","homeSlot":"1A","awaySlot":"3:CEFHI"},
+  {"m":80,"round":"R32","date":"2026-07-01","venue":"Mercedes-Benz Stadium, Atlanta","homeSlot":"1L","awaySlot":"3:EHIJK"},
+  {"m":81,"round":"R32","date":"2026-07-01","venue":"Levi's Stadium, Santa Clara","homeSlot":"1D","awaySlot":"3:BEFIJ"},
+  {"m":82,"round":"R32","date":"2026-07-01","venue":"Lumen Field, Seattle","homeSlot":"1G","awaySlot":"3:AEHIJ"},
+  {"m":83,"round":"R32","date":"2026-07-02","venue":"BMO Field, Toronto","homeSlot":"2K","awaySlot":"2L"},
+  {"m":84,"round":"R32","date":"2026-07-02","venue":"SoFi Stadium, Inglewood","homeSlot":"1H","awaySlot":"2J"},
+  {"m":85,"round":"R32","date":"2026-07-02","venue":"BC Place, Vancouver","homeSlot":"1B","awaySlot":"3:EFGIJ"},
+  {"m":86,"round":"R32","date":"2026-07-03","venue":"Hard Rock Stadium, Miami Gardens","homeSlot":"1J","awaySlot":"2H"},
+  {"m":87,"round":"R32","date":"2026-07-03","venue":"Arrowhead Stadium, Kansas City","homeSlot":"1K","awaySlot":"3:DEIJL"},
+  {"m":88,"round":"R32","date":"2026-07-03","venue":"AT&T Stadium, Arlington","homeSlot":"2D","awaySlot":"2G"},
+  {"m":89,"round":"R16","date":"2026-07-04","venue":"Lincoln Financial Field, Philadelphia","homeSlot":"W74","awaySlot":"W77"},
+  {"m":90,"round":"R16","date":"2026-07-04","venue":"NRG Stadium, Houston","homeSlot":"W73","awaySlot":"W75"},
+  {"m":91,"round":"R16","date":"2026-07-05","venue":"MetLife Stadium, East Rutherford","homeSlot":"W76","awaySlot":"W78"},
+  {"m":92,"round":"R16","date":"2026-07-05","venue":"Estadio Azteca, Mexico City","homeSlot":"W79","awaySlot":"W80"},
+  {"m":93,"round":"R16","date":"2026-07-06","venue":"AT&T Stadium, Arlington","homeSlot":"W83","awaySlot":"W84"},
+  {"m":94,"round":"R16","date":"2026-07-06","venue":"Lumen Field, Seattle","homeSlot":"W81","awaySlot":"W82"},
+  {"m":95,"round":"R16","date":"2026-07-07","venue":"Mercedes-Benz Stadium, Atlanta","homeSlot":"W86","awaySlot":"W88"},
+  {"m":96,"round":"R16","date":"2026-07-07","venue":"BC Place, Vancouver","homeSlot":"W85","awaySlot":"W87"},
+  {"m":97,"round":"QF","date":"2026-07-09","venue":"Gillette Stadium, Foxborough","homeSlot":"W89","awaySlot":"W90"},
+  {"m":98,"round":"QF","date":"2026-07-10","venue":"SoFi Stadium, Inglewood","homeSlot":"W93","awaySlot":"W94"},
+  {"m":99,"round":"QF","date":"2026-07-11","venue":"Hard Rock Stadium, Miami Gardens","homeSlot":"W91","awaySlot":"W92"},
+  {"m":100,"round":"QF","date":"2026-07-11","venue":"Arrowhead Stadium, Kansas City","homeSlot":"W95","awaySlot":"W96"},
+  {"m":101,"round":"SF","date":"2026-07-14","venue":"AT&T Stadium, Arlington","homeSlot":"W97","awaySlot":"W98"},
+  {"m":102,"round":"SF","date":"2026-07-15","venue":"Mercedes-Benz Stadium, Atlanta","homeSlot":"W99","awaySlot":"W100"},
+  {"m":103,"round":"TP","date":"2026-07-18","venue":"Hard Rock Stadium, Miami Gardens","homeSlot":"L101","awaySlot":"L102"},
+  {"m":104,"round":"F","date":"2026-07-19","venue":"MetLife Stadium, East Rutherford","homeSlot":"W101","awaySlot":"W102"}
+];
+DATA.knockout.forEach(k=>{ k.id="k"+k.m; k.localTime=k.localTime||null; if(!("home" in k))k.home=null; if(!("away" in k))k.away=null; if(!("homeScore" in k))k.homeScore=null; if(!("awayScore" in k))k.awayScore=null; if(!("advance" in k))k.advance=null; if(!("status" in k))k.status="upcoming"; });
 
 const FLAGS = {
   "Mexico":"🇲🇽","South Korea":"🇰🇷","Czechia":"🇨🇿","South Africa":"🇿🇦","Switzerland":"🇨🇭",
@@ -581,7 +637,7 @@ let state = defaultState();
 let admin = false;  // edit rights — unlocked per-browser via the PIN; never travels in the share link
 let pendingResultsScroll = false;  // one-shot: scroll Results to the "Cup begins" divider on tab entry
 
-function persistObj(){return{players:state.players,order:state.order,picks:state.picks,log:state.log,overrides:state.overrides,activeTab:state.activeTab,lbView:state.lbView};}
+function persistObj(){return{players:state.players,order:state.order,picks:state.picks,log:state.log,overrides:state.overrides,activeTab:state.activeTab,lbView:state.lbView,ttView:state.ttView};}
 function save(){try{localStorage.setItem(LS_KEY,JSON.stringify(persistObj()));}catch(e){}}
 function loadFromHash(){
   if(location.hash.length<3) return null;
@@ -630,6 +686,7 @@ function teamStats(team, fromMD){
 }
 // pill colour + leaderboard points use the sweepstake scoring window (SCORE_FROM)
 function pillStatus(team){
+  const k=teamKoStats(team); if(k.p>0) return k.last;   // most recent result is a knockout tie
   const s=teamStats(team, SCORE_FROM);
   if(s.last) return s.last;          // won / drew / lost
   return s.hasUpcoming?"pending":"lost";
@@ -647,12 +704,12 @@ function playerColor(id){
 function playerStats(id){
   const teams=teamsOwnedBy(id);
   let pts=0,gd=0,gf=0,ga=0,w=0,d=0,l=0,p=0;
-  teams.forEach(t=>{const s=teamStats(t,SCORE_FROM);pts+=s.pts;gd+=s.gd;gf+=s.gf;ga+=s.ga;w+=s.w;d+=s.d;l+=s.l;p+=s.p;});
+  teams.forEach(t=>{const s=teamStats(t,SCORE_FROM),k=teamKoStats(t);pts+=s.pts+k.pts;gd+=s.gd+k.gd;gf+=s.gf+k.gf;ga+=s.ga+k.ga;w+=s.w+k.w;d+=s.d+k.d;l+=s.l+k.l;p+=s.p+k.p;});
   return {id,teams,pts,gd,gf,ga,w,d,l,p};
 }
 // per-team fixture list (all matchdays) from a team's perspective, for the expanded detail
 function teamFixtures(team){
-  return effMatches().filter(m=>m.home===team||m.away===team)
+  return allMatches().filter(m=>m.home===team||m.away===team)
     .sort((a,b)=> a.date<b.date?-1:(a.date>b.date?1:((a.localTime||'')<(b.localTime||'')?-1:1)))
     .map(m=>{
       const home=m.home===team, opp=home?m.away:m.home, played=isPlayed(m);
@@ -672,6 +729,64 @@ function groupStandings(g){
   return DATA.groups[g].map(t=>teamStats(t,1)) // real tournament table = all matches
     .sort((a,b)=> b.pts-a.pts || b.gd-a.gd || b.gf-a.gf ||
       (a.team.toLowerCase()<b.team.toLowerCase()?-1:1));
+}
+
+/* ---------- KNOCKOUT STAGE ---------- */
+const KO_ROUND={R32:"Round of 32",R16:"Round of 16",QF:"Quarter-final",SF:"Semi-final",TP:"Third place",F:"Final"};
+const KO_SHORT={R32:"R32",R16:"R16",QF:"QF",SF:"SF",TP:"3rd",F:"Final"};
+function groupComplete(g){ const ms=DATA.groupMatches.filter(m=>m.group===g); return ms.length>0 && ms.every(isPlayed); }
+function koAdvancer(m){ if(!isPlayed(m)) return null; if(m.homeScore>m.awayScore) return m.home; if(m.awayScore>m.homeScore) return m.away; return m.advance||null; }
+function koLoserOf(m){ const adv=koAdvancer(m); if(!adv||!m.home||!m.away) return null; return adv===m.home?m.away:m.home; }
+function slotTeam(slot,resolved){
+  if(!slot) return null; let mm;
+  if(mm=/^([12])([A-L])$/.exec(slot)){ if(!groupComplete(mm[2])) return null; const st=groupStandings(mm[2]); return (st[mm[1]==="1"?0:1]||{}).team||null; }
+  if(mm=/^W(\d+)$/.exec(slot)){ const w=resolved[+mm[1]]; return w?koAdvancer(w):null; }
+  if(mm=/^L(\d+)$/.exec(slot)){ const w=resolved[+mm[1]]; return w?koLoserOf(w):null; }
+  return null; // best-3rd "3:GROUPS" — filled via k.home/k.away or an override
+}
+function slotLabel(slot){
+  if(!slot) return "TBD"; let mm;
+  if(mm=/^1([A-L])$/.exec(slot)) return "Winner "+mm[1];
+  if(mm=/^2([A-L])$/.exec(slot)) return "Runner-up "+mm[1];
+  if(mm=/^W(\d+)$/.exec(slot)) return "Winner M"+mm[1];
+  if(mm=/^L(\d+)$/.exec(slot)) return "Loser M"+mm[1];
+  if(mm=/^3:(.+)$/.exec(slot)) return "3rd "+mm[1].split("").join("/");
+  return slot;
+}
+function resolveKnockout(){
+  const resolved={};
+  (DATA.knockout||[]).slice().sort((a,b)=>a.m-b.m).forEach(k=>{
+    const o=state.overrides[k.id]||{};
+    const m=Object.assign({},k,o);
+    if(!m.home) m.home=slotTeam(k.homeSlot,resolved);
+    if(!m.away) m.away=slotTeam(k.awaySlot,resolved);
+    resolved[k.m]=m;
+  });
+  return (DATA.knockout||[]).map(k=>resolved[k.m]);
+}
+function allMatches(){ return effMatches().concat(resolveKnockout()); }
+function teamKoStats(team){
+  let p=0,w=0,d=0,l=0,gf=0,ga=0,last=null;
+  resolveKnockout().forEach(m=>{
+    if(!isPlayed(m)||(m.home!==team&&m.away!==team)) return;
+    const home=m.home===team, f=home?m.homeScore:m.awayScore, a=home?m.awayScore:m.homeScore;
+    p++;gf+=f;ga+=a; const r=f>a?"won":f===a?"drew":"lost";
+    if(r==="won")w++;else if(r==="drew")d++;else l++; last=r;
+  });
+  return {p,w,d,l,gf,ga,gd:gf-ga,pts:w*3+d,last};
+}
+function koTeamSet(){ const s=new Set(); resolveKnockout().forEach(m=>{ if(m.home)s.add(m.home); if(m.away)s.add(m.away); }); return s; }
+function r32Drawn(){ const r=resolveKnockout().filter(m=>m.round==="R32"); return r.length>0 && r.every(m=>m.home&&m.away); }
+// out of the tournament: lost a knockout tie, or finished outside the qualifying places once decided
+function isOut(team){
+  if(resolveKnockout().some(m=>isPlayed(m)&&(m.home===team||m.away===team)&&koAdvancer(m)!==team)) return true;
+  const g=groupOf(team);
+  if(g&&groupComplete(g)){
+    const idx=groupStandings(g).findIndex(s=>s.team===team);
+    if(idx>=3) return true;                                       // 4th never advances
+    if(idx===2 && r32Drawn() && !koTeamSet().has(team)) return true; // 3rd, missed the best-8
+  }
+  return isEliminated(team);
 }
 
 /* ---------- DRAFT LOGIC ---------- */
@@ -815,8 +930,8 @@ function renderNotice(){
 function renderTabs(){
   const t=document.getElementById("tabs");
   const counts={
-    results: effMatches().filter(isPlayed).length,
-    coming: effMatches().filter(m=>!isPlayed(m)).length,
+    results: allMatches().filter(isPlayed).length,
+    coming: allMatches().filter(m=>!isPlayed(m)).length,
     teams: TOTAL_TEAMS,
     leaderboard: state.players.length
   };
@@ -973,9 +1088,9 @@ function legend(){
 }
 function teamPill(team){
   const st=pillStatus(team);
-  const s=teamStats(team, SCORE_FROM);
-  const title = `${team}: ${s.w}W ${s.d}D ${s.l}L · ${s.pts} pts · GD ${s.gd>=0?'+':''}${s.gd}`;
-  return `<span class="pill ${st}" title="${esc(title)}"><span class="fl">${flag(team)}</span>${esc(team)}</span>`;
+  const s=teamStats(team, SCORE_FROM), k=teamKoStats(team), out=isOut(team);
+  const title = `${team}: ${s.w+k.w}W ${s.d+k.d}D ${s.l+k.l}L · ${s.pts+k.pts} pts · GD ${(s.gd+k.gd)>=0?'+':''}${s.gd+k.gd}${out?' · eliminated':''}`;
+  return `<span class="pill ${st}${out?' out':''}" title="${esc(title)}"><span class="fl">${flag(team)}</span>${esc(team)}</span>`;
 }
 /* ---------- DRAFT INTEL ---------- */
 // conservative top-2 outlook per group (only claims through/out when mathematically certain)
@@ -1133,7 +1248,7 @@ function playerDetailHTML(pid){
   // chronological list of this player's matches across all their teams (scoring window only, no MD1)
   const rows=[];
   teamsOwnedBy(pid).forEach(t=>teamFixtures(t).forEach(f=>{
-    if(f.m.matchday < SCORE_FROM) return;
+    if(f.m.matchday!=null && f.m.matchday < SCORE_FROM) return;  // skip pre-cup MD1 only; knockout (matchday null) counts
     rows.push(Object.assign({team:t},f));
   }));
   rows.sort((a,b)=> a.m.date<b.m.date?-1:(a.m.date>b.m.date?1:((a.m.localTime||'')<(b.m.localTime||'')?-1:1)));
@@ -1148,7 +1263,7 @@ function playerDetailHTML(pid){
       right=`<span class="pd-when">${m.localTime||'TBD'} · ${fmtDate(m.date)}</span>`;
     }
     h+=`<div class="pd-row">
-      <span class="pd-md">MD${m.matchday}</span>
+      <span class="pd-md">${m.matchday?("MD"+m.matchday):(KO_SHORT[m.round]||"KO")}</span>
       <span class="pd-team"><span class="fl">${flag(r.team)}</span> ${esc(r.team)}</span>
       <span class="pd-vs">v <span class="fl">${flag(r.opp)}</span> ${esc(r.opp)}</span>
       <span class="pd-right">${right}</span>
@@ -1175,7 +1290,7 @@ function lbTable(lb){
 }
 function lastResultsDayKey(){
   let best=null;
-  effMatches().forEach(m=>{
+  allMatches().forEach(m=>{
     if(!isPlayed(m)) return;
     if(!(m.matchday==null||m.matchday>=SCORE_FROM)) return;
     const a=aestParts(m); const key=a?a.dateKey:m.date;
@@ -1185,7 +1300,7 @@ function lastResultsDayKey(){
 }
 function nextMatchDayKey(afterKey){
   let best=null;
-  effMatches().forEach(m=>{
+  allMatches().forEach(m=>{
     if(isPlayed(m)) return;
     const a=aestParts(m); const key=a?a.dateKey:m.date;
     if(afterKey && key<=afterKey) return;
@@ -1202,7 +1317,7 @@ function daySummary(){
   const day=lastResultsDayKey();
   if(!day) return '';
   const per={}; const dayMatches=[];
-  effMatches().forEach(m=>{
+  allMatches().forEach(m=>{
     if(!isPlayed(m)) return;
     if(!(m.matchday==null||m.matchday>=SCORE_FROM)) return;
     const a=aestParts(m); const key=a?a.dateKey:m.date;
@@ -1263,7 +1378,7 @@ function daySummary(){
   if(notables.length){ notables.sort((a,b)=>b.gap-a.gap); parts.push(`Surprise of the day: ${notables.slice(0,2).map(n=>n.text).join('; ')}.`); }
   const next=nextMatchDayKey(day);
   if(next){
-    const games=effMatches().filter(m=>{ if(isPlayed(m)) return false; const a=aestParts(m); return (a?a.dateKey:m.date)===next; }).map(m=>({m,a:aestParts(m)})).sort((x,y)=>(x.a?x.a.ms:0)-(y.a?y.a.ms:0));
+    const games=allMatches().filter(m=>{ if(isPlayed(m)) return false; const a=aestParts(m); return (a?a.dateKey:m.date)===next; }).map(m=>({m,a:aestParts(m)})).sort((x,y)=>(x.a?x.a.ms:0)-(y.a?y.a.ms:0));
     if(games.length){
       const ranked=games.slice().sort((x,y)=>(Math.min(rank(x.m.home)||999,rank(x.m.away)||999))-(Math.min(rank(y.m.home)||999,rank(y.m.away)||999)));
       const ho=t=>{const p=playerById(ownerOf(t));return p?`<strong>${esc(p.name)}</strong>`:'unowned';};
@@ -1279,6 +1394,9 @@ function daySummary(){
       parts.push(look);
     }
   }
+  const elimd=[];
+  dayMatches.forEach(m=>{ [m.home,m.away].forEach(t=>{ if(t&&isOut(t)&&!elimd.includes(t)) elimd.push(t); }); });
+  if(elimd.length){ parts.push('Knocked out: '+elimd.map(t=>{const o=playerById(ownerOf(t));return esc(t)+(o?` (<strong>${esc(o.name)}</strong>)`:'');}).join(', ')+'.'); }
   if(!parts.length) return '';
   return `<div class="day-review"><div class="dr-h">📊 Day in review · ${fmtDateLong(day)}</div><p class="dr-body">${parts.join(' ')}</p></div>`;
 }
@@ -1320,36 +1438,43 @@ function viewLeaderboard(){
 /* ---------- RESULTS TAB ---------- */
 function renderMatch(m,opts={}){
   const played=isPlayed(m);
+  const ko=!!m.round;
   const today = m.date===TODAY;
   const showOwners = !opts.hideOwners;
   const venue = opts.showVenue && m.venue ? ' · '+esc(m.venue.split(',')[0]) : '';
+  const homeName = m.home||slotLabel(m.homeSlot), awayName = m.away||slotLabel(m.awaySlot);
   let center, hb="", ab="";
   if(played){
     const hr = m.homeScore>m.awayScore?'w':(m.homeScore===m.awayScore?'d':'l');
     const ar = m.awayScore>m.homeScore?'w':(m.homeScore===m.awayScore?'d':'l');
     hb=`<span class="res-badge ${hr}">${hr.toUpperCase()}</span>`;
     ab=`<span class="res-badge ${ar}">${ar.toUpperCase()}</span>`;
-    center=`<div class="score">${m.homeScore} – ${m.awayScore}</div>`;
+    const pen=(ko && m.homeScore===m.awayScore && m.advance)?`<div class="pen-note">${esc(m.advance)} on pens</div>`:'';
+    center=`<div class="score">${m.homeScore} – ${m.awayScore}</div>${pen}`;
   }else{
     center=`<div class="score tbd">${opts.timeLabel || m.localTime || 'TBD'}</div>`;
   }
-  const editBtn = admin ? `<button class="btn sm" data-action="edit-match" data-id="${m.id}">${played?'Edit':'+ Score'}</button>` : '';
+  const editBtn = (admin && !ko) ? `<button class="btn sm" data-action="edit-match" data-id="${m.id}">${played?'Edit':'+ Score'}</button>` : '';
   const dateBit = opts.hideDateInMeta ? '' : ' · '+fmtDate(m.date);
   const todayBit = (!opts.hideDateInMeta && today) ? ' <span class="today-badge">TODAY</span>' : '';
+  const hdr = ko ? `${KO_ROUND[m.round]} · M${m.m}` : `Group ${m.group} · MD${m.matchday}`;
+  const fl=t=>t?`<span class="fl">${flag(t)}</span>`:'';
+  const chip=t=>(showOwners&&t)?ownerChip(t,{hideEmpty:!draftComplete()}):'';
+  const oc=t=>t&&isOut(t)?' out':'';
   return `<div class="match">
     <div class="match-meta">
-      <span class="mm-info">Group ${m.group} · MD${m.matchday}${dateBit}${venue}${todayBit}</span>
+      <span class="mm-info">${hdr}${dateBit}${venue}${todayBit}</span>
       ${editBtn}
     </div>
     <div class="match-main">
       <div class="side home">
-        <div class="teamline">${hb}<span>${esc(m.home)}</span><span class="fl">${flag(m.home)}</span></div>
-        ${showOwners?ownerChip(m.home,{hideEmpty:!draftComplete()}):''}
+        <div class="teamline${oc(m.home)}">${hb}<span>${esc(homeName)}</span>${fl(m.home)}</div>
+        ${chip(m.home)}
       </div>
       ${center}
       <div class="side away">
-        <div class="teamline"><span class="fl">${flag(m.away)}</span><span>${esc(m.away)}</span>${ab}</div>
-        ${showOwners?ownerChip(m.away,{hideEmpty:!draftComplete()}):''}
+        <div class="teamline${oc(m.away)}">${fl(m.away)}<span>${esc(awayName)}</span>${ab}</div>
+        ${chip(m.away)}
       </div>
     </div>
   </div>`;
@@ -1361,17 +1486,17 @@ function fmtDate(d){
 }
 function viewResults(){
   // most recent first; a "Cup begins" divider sits at the MD2→MD1 boundary (pre-cup results sit below it)
-  const played=effMatches().filter(isPlayed).sort((a,b)=> a.date>b.date?-1:(a.date<b.date?1:((a.localTime||'')>(b.localTime||'')?-1:1)));
+  const played=allMatches().filter(isPlayed).sort((a,b)=> a.date>b.date?-1:(a.date<b.date?1:((a.localTime||'')>(b.localTime||'')?-1:1)));
   if(!played.length) return `<div class="empty"><div class="big">📋</div><h3>No results yet</h3><p>Played matches appear here, most recent first.</p></div>`;
   let html=`<div class="section-head" style="margin-top:6px"><h2>Results</h2><span class="sub">${played.length} matches played · most recent first</span></div>`;
   let lastDate=null, dividerShown=false;
   played.forEach(m=>{
-    if(!dividerShown && m.matchday<SCORE_FROM){
+    if(!dividerShown && m.matchday!=null && m.matchday<SCORE_FROM){
       html+=`<div class="cupbegins"><span>⚽ Cup begins · pre-cup results below</span></div>`;
       dividerShown=true; lastDate=null;
     }
     if(m.date!==lastDate){ html+=`<div class="daygroup">${fmtDateLong(m.date)}</div>`; lastDate=m.date; }
-    html+=renderMatch(m,{hideOwners:m.matchday<SCORE_FROM});
+    html+=renderMatch(m,{hideOwners:m.matchday!=null && m.matchday<SCORE_FROM});
   });
   return html;
 }
@@ -1407,14 +1532,14 @@ function aestParts(m){
   return {ms:d.getTime(),timeStr,dateKey};
 }
 function viewComing(){
-  let up=effMatches().filter(m=>!isPlayed(m)).map(m=>({m,a:aestParts(m)}));
+  let up=allMatches().filter(m=>!isPlayed(m)).map(m=>({m,a:aestParts(m)}));
   up.sort((x,y)=>{
     const xm=x.a?x.a.ms:Date.parse((x.m.date||'')+'T'+(x.m.localTime||'00:00')+':00Z');
     const ym=y.a?y.a.ms:Date.parse((y.m.date||'')+'T'+(y.m.localTime||'00:00')+':00Z');
     return xm-ym;
   });
-  if(!up.length) return `<div class="empty"><div class="big">🏁</div><h3>Group stage complete</h3><p>All scheduled group matches have results.</p></div>`;
-  let html=`<div class="section-head" style="margin-top:6px"><h2>Coming up</h2><span class="sub">${up.length} matches to play · kickoff times in AEST</span></div>`;
+  if(!up.length) return `<div class="empty"><div class="big">🏆</div><h3>That\u2019s a wrap</h3><p>Every match through the final has a result.</p></div>`;
+  let html=`<div class="section-head" style="margin-top:6px"><h2>Coming up</h2><span class="sub">${up.length} matches to play · group kickoffs in AEST · knockouts to the final</span></div>`;
   let lastKey=null;
   up.forEach(({m,a})=>{
     const key=a?a.dateKey:m.date;
@@ -1429,8 +1554,12 @@ function viewComing(){
 
 /* ---------- ALL TEAMS TAB ---------- */
 function viewTeams(){
-  let html=`<div class="section-head" style="margin-top:6px"><h2>Tournament Table</h2>
-    <span class="sub">${draftComplete()?'owner shown · ':''}top 2 advance</span></div>
+  const tv=state.ttView||'groups';
+  const seg=`<div class="seg"><button class="seg-btn ${tv==='groups'?'on':''}" data-action="ttview" data-v="groups">Groups</button>`+
+    `<button class="seg-btn ${tv==='bracket'?'on':''}" data-action="ttview" data-v="bracket">Knockout</button></div>`;
+  const head=`<div class="lb-head"><h2>Tournament Table</h2>${seg}</div>`;
+  if(tv==='bracket') return head+viewBracket();
+  let html=head+`<div class="sub" style="margin:-4px 2px 12px">${draftComplete()?'owner shown · ':''}top 2 advance (+ 8 best 3rd places)</div>
     <div class="groups-grid">`;
   GROUP_LETTERS.forEach((g,gi)=>{
     const hue=gi*30, rows=groupStandings(g);
@@ -1448,6 +1577,40 @@ function viewTeams(){
       </tr>`;
     });
     html+=`</tbody></table></div>`;
+  });
+  html+=`</div>`;
+  return html;
+}
+
+/* ---------- KNOCKOUT BRACKET ---------- */
+function koOwnerChip(team){ const pid=ownerOf(team); if(!pid) return ''; const p=playerById(pid); return p?`<span class="bk-own" style="background:${playerColor(pid)}">${esc(p.name)}</span>`:''; }
+function bracketCard(m){
+  const played=isPlayed(m);
+  const side=(team,slot,score)=>{
+    const out=team&&isOut(team), adv=played&&koAdvancer(m)===team&&team;
+    const nm = team ? `<span class="fl">${flag(team)}</span><span class="bk-nm${out?' out':''}">${esc(team)}</span>${koOwnerChip(team)}`
+                    : `<span class="bk-slot">${slotLabel(slot)}</span>`;
+    return `<div class="bk-side${adv?' adv':''}">${nm}<span class="bk-s">${played?score:''}</span></div>`;
+  };
+  const pen=(played && m.homeScore===m.awayScore && m.advance)?`<div class="bk-pen">${esc(m.advance)} on pens</div>`:'';
+  return `<div class="bk-match">
+    <div class="bk-mh">M${m.m} · ${fmtDate(m.date)}${m.venue?' · '+esc(m.venue.split(',')[0]):''}</div>
+    ${side(m.home,m.homeSlot,played?m.homeScore:'')}
+    ${side(m.away,m.awaySlot,played?m.awayScore:'')}
+    ${pen}
+  </div>`;
+}
+function viewBracket(){
+  const ko=resolveKnockout();
+  const rounds=[["R32","Round of 32"],["R16","Round of 16"],["QF","Quarter-finals"],["SF","Semi-finals"],["F","Final"],["TP","Third place"]];
+  let html=`<div class="bracket">`;
+  rounds.forEach(([code,label])=>{
+    const ms=ko.filter(m=>m.round===code);
+    if(!ms.length) return;
+    const done=ms.filter(isPlayed).length;
+    html+=`<div class="bk-round"><div class="bk-rh">${label} <span class="bk-rc">${done}/${ms.length}</span></div>`;
+    ms.forEach(m=>{ html+=bracketCard(m); });
+    html+=`</div>`;
   });
   html+=`</div>`;
   return html;
@@ -1622,6 +1785,7 @@ document.addEventListener("click",e=>{
     case "toggle-timer": timerPaused=!timerPaused; render(); break;
     case "tab": state.activeTab=el.dataset.tab; if(el.dataset.tab==="results") pendingResultsScroll=true; save(); render(); break;
     case "lbview": state.lbView=el.dataset.v; save(); render(); break;
+    case "ttview": state.ttView=el.dataset.v; save(); render(); break;
     case "toggle-player": expandedPid = expandedPid===el.dataset.pid ? null : el.dataset.pid; render(); break;
     case "add-player": { const i=document.getElementById("playerName"); addPlayer(i.value); break; }
     case "remove-player": removePlayer(el.dataset.pid); break;
