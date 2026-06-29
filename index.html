@@ -714,7 +714,7 @@ function teamFixtures(team){
     .map(m=>{
       const home=m.home===team, opp=home?m.away:m.home, played=isPlayed(m);
       const gf=home?m.homeScore:m.awayScore, ga=home?m.awayScore:m.homeScore;
-      const res=played?(gf>ga?'won':gf===ga?'drew':'lost'):null;
+      const res=played?((m.matchday==null) ? (koAdvancer(m)===team?'won':'lost') : (gf>ga?'won':gf===ga?'drew':'lost')):null;
       const counts=(m.matchday==null || m.matchday>=SCORE_FROM);
       const pts=(played&&counts)?(res==='won'?3:res==='drew'?1:0):null;
       return {m,opp,home,played,gf,ga,res,counts,pts};
@@ -770,8 +770,9 @@ function teamKoStats(team){
   resolveKnockout().forEach(m=>{
     if(!isPlayed(m)||(m.home!==team&&m.away!==team)) return;
     const home=m.home===team, f=home?m.homeScore:m.awayScore, a=home?m.awayScore:m.homeScore;
-    p++;gf+=f;ga+=a; const r=f>a?"won":f===a?"drew":"lost";
-    if(r==="won")w++;else if(r==="drew")d++;else l++; last=r;
+    p++;gf+=f;ga+=a;
+    const r=koAdvancer(m)===team?"won":"lost";   // knockout points follow PROGRESSION, not the scoreline (a pen-shootout win still scores 3, no draws in the KO)
+    if(r==="won")w++;else l++; last=r;
   });
   return {p,w,d,l,gf,ga,gd:gf-ga,pts:w*3+d,last};
 }
@@ -1325,7 +1326,7 @@ function daySummary(){
     dayMatches.push(m);
     [[m.home,m.homeScore,m.awayScore],[m.away,m.awayScore,m.homeScore]].forEach(([team,gf,ga])=>{
       const pid=ownerOf(team); if(!pid) return;
-      const res=gf>ga?'won':(gf===ga?'drew':'lost');
+      const res=(m.matchday==null)?(koAdvancer(m)===team?'won':'lost'):(gf>ga?'won':(gf===ga?'drew':'lost'));   // KO: progression decides, no draws
       const o=per[pid]||(per[pid]={pts:0,w:0,d:0,l:0,gd:0,won:[],drew:[],lost:[]});
       o.pts+=(res==='won'?3:res==='drew'?1:0); o.gd+=(gf-ga);
       if(res==='won'){o.w++;o.won.push(team);} else if(res==='drew'){o.d++;o.drew.push(team);} else {o.l++;o.lost.push(team);}
