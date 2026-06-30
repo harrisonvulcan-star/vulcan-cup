@@ -437,7 +437,7 @@
 
 /* ---------- EMBEDDED TOURNAMENT DATA (real 2026 WC) ---------- */
 const DATA = {
-  "asOf": "2026-06-29",
+  "asOf": "2026-06-30",
   "groups": {
     "A": ["Mexico", "South Korea", "Czechia", "South Africa"],
     "B": ["Switzerland", "Canada", "Qatar", "Bosnia and Herzegovina"],
@@ -568,9 +568,9 @@ DATA.groupMatches.forEach((m,i)=>m.id=i);
 // ---- KNOCKOUT BRACKET (slots auto-resolve from results; 3rd-place + scores filled as the tournament progresses) ----
 DATA.knockout = [
   {"m":73,"round":"R32","date":"2026-06-28","venue":"SoFi Stadium, Inglewood","homeSlot":"2A","awaySlot":"2B","homeScore":0,"awayScore":1,"status":"played"},
-  {"m":74,"round":"R32","date":"2026-06-29","venue":"Gillette Stadium, Foxborough","homeSlot":"1E","awaySlot":"3:ABCDF","away":"Paraguay"},
-  {"m":75,"round":"R32","date":"2026-06-29","venue":"Estadio BBVA, Guadalupe","homeSlot":"1F","awaySlot":"2C"},
-  {"m":76,"round":"R32","date":"2026-06-29","venue":"NRG Stadium, Houston","homeSlot":"1C","awaySlot":"2F"},
+  {"m":74,"round":"R32","date":"2026-06-29","venue":"Gillette Stadium, Foxborough","homeSlot":"1E","awaySlot":"3:ABCDF","away":"Paraguay","homeScore":1,"awayScore":1,"advance":"Paraguay","status":"played"},
+  {"m":75,"round":"R32","date":"2026-06-29","venue":"Estadio BBVA, Guadalupe","homeSlot":"1F","awaySlot":"2C","homeScore":1,"awayScore":1,"advance":"Morocco","status":"played"},
+  {"m":76,"round":"R32","date":"2026-06-29","venue":"NRG Stadium, Houston","homeSlot":"1C","awaySlot":"2F","homeScore":2,"awayScore":1,"status":"played"},
   {"m":77,"round":"R32","date":"2026-06-30","venue":"MetLife Stadium, East Rutherford","homeSlot":"1I","awaySlot":"3:CDFGH","away":"Sweden"},
   {"m":78,"round":"R32","date":"2026-06-30","venue":"AT&T Stadium, Arlington","homeSlot":"2E","awaySlot":"2I"},
   {"m":79,"round":"R32","date":"2026-06-30","venue":"Estadio Azteca, Mexico City","homeSlot":"1A","awaySlot":"3:CEFHI","away":"Ecuador"},
