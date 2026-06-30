@@ -319,6 +319,7 @@
   .pill.out{text-decoration:line-through;opacity:.5}
   .teamline.out{text-decoration:line-through;opacity:.55}
   .pen-note{font-size:10px;color:var(--muted);text-align:center;margin-top:2px}
+  .pd-pens{font-size:9px;color:var(--muted);margin-left:5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;vertical-align:middle}
   .bracket{display:flex;gap:14px;overflow-x:auto;padding:6px 2px 16px}
   .bk-round{display:flex;flex-direction:column;gap:8px;min-width:184px;flex:0 0 auto}
   .bk-rh{font-family:var(--display);font-weight:700;font-size:12px;color:var(--pitch-dark);text-transform:uppercase;letter-spacing:.03em;padding:2px 2px 4px}
@@ -1259,7 +1260,8 @@ function playerDetailHTML(pid){
     const m=r.m; let right;
     if(r.played){
       const bc=r.res==='won'?'w':r.res==='drew'?'d':'l';
-      right=`<span class="td-score">${r.gf}–${r.ga}</span><span class="res-badge ${bc}">${bc.toUpperCase()}</span><span class="td-pts">+${r.pts}</span>`;
+      const koPens=(m.matchday==null && r.gf===r.ga)?`<span class="pd-pens">pens</span>`:'';   // level KO → decided on pens, not a draw
+      right=`<span class="td-score">${r.gf}–${r.ga}${koPens}</span><span class="res-badge ${bc}">${bc.toUpperCase()}</span><span class="td-pts">+${r.pts}</span>`;
     }else{
       right=`<span class="pd-when">${m.localTime||'TBD'} · ${fmtDate(m.date)}</span>`;
     }
@@ -1446,8 +1448,9 @@ function renderMatch(m,opts={}){
   const homeName = m.home||slotLabel(m.homeSlot), awayName = m.away||slotLabel(m.awaySlot);
   let center, hb="", ab="";
   if(played){
-    const hr = m.homeScore>m.awayScore?'w':(m.homeScore===m.awayScore?'d':'l');
-    const ar = m.awayScore>m.homeScore?'w':(m.homeScore===m.awayScore?'d':'l');
+    let hr, ar;
+    if(ko && m.homeScore===m.awayScore){ const adv=koAdvancer(m); hr=(adv===m.home)?'w':'l'; ar=(adv===m.away)?'w':'l'; }   // KO level → decided on pens: advancer W, other L (never a draw)
+    else { hr=m.homeScore>m.awayScore?'w':(m.homeScore===m.awayScore?'d':'l'); ar=m.awayScore>m.homeScore?'w':(m.homeScore===m.awayScore?'d':'l'); }
     hb=`<span class="res-badge ${hr}">${hr.toUpperCase()}</span>`;
     ab=`<span class="res-badge ${ar}">${ar.toUpperCase()}</span>`;
     const pen=(ko && m.homeScore===m.awayScore && m.advance)?`<div class="pen-note">${esc(m.advance)} on pens</div>`:'';
