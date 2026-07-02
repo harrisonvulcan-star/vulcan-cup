@@ -1342,7 +1342,9 @@ function daySummary(){
     const bigDay=(top.w>=2||top.pts>=4); const lead=bigDay?'had a big day':'led the day';
     let s='';
     if(top.pts===0){ s=`A bruising day across the board — no owner came away with a win`; }
-    else if(top.w>0){ s=`<strong>${esc(top.name)}</strong> ${lead} with ${top.w} ${top.w===1?'win':'wins'} from ${joinNames(top.won.map(esc))}`; if(top.d===1) s+=` and a draw`; else if(top.d>1) s+=` and ${top.d} draws`; }
+    else if(top.w>0){ const leaders=arr.filter(x=>x.w===top.w);   // everyone tied on the day's best win count
+      if(leaders.length>1){ s=`${joinNames(leaders.map(l=>`<strong>${esc(l.name)}</strong> (${joinNames(l.won.map(esc))})`))} shared the day's best with ${top.w} ${top.w===1?'win':'wins'} each`; }
+      else { s=`<strong>${esc(top.name)}</strong> ${lead} with ${top.w} ${top.w===1?'win':'wins'} from ${joinNames(top.won.map(esc))}`; if(top.d===1) s+=` and a draw`; else if(top.d>1) s+=` and ${top.d} draws`; } }
     else{ s=`<strong>${esc(top.name)}</strong> ${lead} with ${top.d} ${top.d===1?'draw':'draws'} for ${top.pts} ${top.pts===1?'point':'points'}`; }
     if(top.pts>0 && bottom.pid!==top.pid && bottom.l>0 && bottom.pts<top.pts){
       const allLost=(bottom.w===0&&bottom.d===0); let desc;
@@ -1353,6 +1355,12 @@ function daySummary(){
     }
     parts.push(s+'.');
   }
+  const koDay = dayMatches.length>0 && dayMatches.every(m=>m.matchday==null);
+  if(koDay){
+    const hoK=t=>{const p=playerById(ownerOf(t));return p?`<strong>${esc(p.name)}</strong>`:'unowned';};
+    const koLines=dayMatches.map(m=>{ const adv=koAdvancer(m); if(!adv) return null; const other=adv===m.home?m.away:m.home; const level=(m.homeScore===m.awayScore), af=Math.max(m.homeScore,m.awayScore), of=Math.min(m.homeScore,m.awayScore), marg=af-of; const rA=rank(adv),rO=rank(other); const upset=(rA!=null&&rO!=null&&rA-rO>=15); let verb; if(upset)verb='stunned'; else if(level)verb='edged past'; else if(marg>=3)verb='brushed aside'; else if(marg===2)verb='saw off'; else verb='edged'; const score=level?`on penalties (${m.homeScore}–${m.awayScore})`:`${af}–${of}`; return {up:upset?1:0,marg:level?0:marg,text:`${esc(adv)} (${hoK(adv)}) ${verb} ${esc(other)} (${hoK(other)}) ${score}`}; }).filter(Boolean).sort((a,b)=>b.up-a.up||b.marg-a.marg);
+    if(koLines.length) parts.push(`Knockout rundown: ${joinNames(koLines.map(l=>l.text))}.`);
+  } else {
   const decisive=dayMatches.filter(m=>m.homeScore!==m.awayScore);
   if(decisive.length){
     decisive.sort((a,b)=>{ const ma=Math.abs(a.homeScore-a.awayScore), mb=Math.abs(b.homeScore-b.awayScore); return mb-ma || (b.homeScore+b.awayScore)-(a.homeScore+a.awayScore); });
@@ -1380,6 +1388,7 @@ function daySummary(){
     else if(!ko && draw && gap>=20){ notables.push({gap,text:`${esc(underdog)} (${ordinal(udRank)}, <strong>${ownU}</strong>) held ${esc(favorite)} (${ordinal(favRank)}, <strong>${ownF}</strong>) to a ${m.homeScore}\u2013${m.awayScore} draw`}); }
   });
   if(notables.length){ notables.sort((a,b)=>b.gap-a.gap); parts.push(`Surprise of the day: ${notables.slice(0,2).map(n=>n.text).join('; ')}.`); }
+  }
   const next=nextMatchDayKey(day);
   if(next){
     const games=allMatches().filter(m=>{ if(isPlayed(m)) return false; const a=aestParts(m); return (a?a.dateKey:m.date)===next; }).map(m=>({m,a:aestParts(m)})).sort((x,y)=>(x.a?x.a.ms:0)-(y.a?y.a.ms:0));
