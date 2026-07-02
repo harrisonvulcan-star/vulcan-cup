@@ -1346,12 +1346,18 @@ function daySummary(){
       if(leaders.length>1){ s=`${joinNames(leaders.map(l=>`<strong>${esc(l.name)}</strong> (${joinNames(l.won.map(esc))})`))} shared the day's best with ${top.w} ${top.w===1?'win':'wins'} each`; }
       else { s=`<strong>${esc(top.name)}</strong> ${lead} with ${top.w} ${top.w===1?'win':'wins'} from ${joinNames(top.won.map(esc))}`; if(top.d===1) s+=` and a draw`; else if(top.d>1) s+=` and ${top.d} draws`; } }
     else{ s=`<strong>${esc(top.name)}</strong> ${lead} with ${top.d} ${top.d===1?'draw':'draws'} for ${top.pts} ${top.pts===1?'point':'points'}`; }
-    if(top.pts>0 && bottom.pid!==top.pid && bottom.l>0 && bottom.pts<top.pts){
-      const allLost=(bottom.w===0&&bottom.d===0); let desc;
-      if(allLost&&bottom.l===2) desc='losing both';
-      else if(allLost&&bottom.l>=3) desc='losing all '+bottom.l;
-      else desc=`with ${bottom.l} ${bottom.l===1?'loss':'losses'}`;
-      s+=`, whilst <strong>${esc(bottom.name)}</strong> struggled, ${desc}`;
+    if(top.pts>0){
+      const minPts=Math.min(...arr.map(x=>x.pts));   // strugglers = everyone tied at the day's worst points haul (with a loss)
+      const strugglers=arr.filter(x=>x.pts===minPts && x.l>0 && minPts<top.pts);
+      if(strugglers.length===1){
+        const b=strugglers[0], allLost=(b.w===0&&b.d===0);
+        const desc = allLost&&b.l===2 ? 'losing both' : allLost&&b.l>=3 ? 'losing all '+b.l : `with ${b.l} ${b.l===1?'loss':'losses'}`;
+        s+=`, whilst <strong>${esc(b.name)}</strong> struggled, ${desc}`;
+      } else if(strugglers.length>1){
+        const sameL=strugglers.every(x=>x.l===strugglers[0].l);
+        if(sameL) s+=`, whilst ${joinNames(strugglers.map(x=>`<strong>${esc(x.name)}</strong>`))} ${strugglers.length===2?'both':'all'} struggled with ${strugglers[0].l} ${strugglers[0].l===1?'loss':'losses'} each`;
+        else s+=`, whilst ${joinNames(strugglers.map(x=>`<strong>${esc(x.name)}</strong> (${x.l} ${x.l===1?'loss':'losses'})`))} all struggled`;
+      }
     }
     parts.push(s+'.');
   }
@@ -1393,13 +1399,10 @@ function daySummary(){
   if(next){
     const games=allMatches().filter(m=>{ if(isPlayed(m)) return false; const a=aestParts(m); return (a?a.dateKey:m.date)===next; }).map(m=>({m,a:aestParts(m)})).sort((x,y)=>(x.a?x.a.ms:0)-(y.a?y.a.ms:0));
     if(games.length){
-      const ranked=games.slice().sort((x,y)=>(Math.min(rank(x.m.home)||999,rank(x.m.away)||999))-(Math.min(rank(y.m.home)||999,rank(y.m.away)||999)));
       const ho=t=>{const p=playerById(ownerOf(t));return p?`<strong>${esc(p.name)}</strong>`:'unowned';};
-      const fixture=g=>`${esc(g.m.home)} v ${esc(g.m.away)} (${ho(g.m.home)} v ${ho(g.m.away)})`;
+      const fixture=g=>{ const oh=ho(g.m.home), oa=ho(g.m.away); return `${esc(g.m.home)} v ${esc(g.m.away)} (${oh===oa?'both '+oh:oh+' v '+oa})`; };
       const dt=new Date(day+'T00:00:00Z'), nd=new Date(next+'T00:00:00Z'); const dayLabel=(nd-dt===86400000)?'tomorrow':fmtDateLong(next);
-      let look=`Coming up ${dayLabel}: ${games.length} ${games.length===1?'match':'matches'}. Headline fixture: ${fixture(ranked[0])}`;
-      if(ranked.length>1) look+=`, with ${fixture(ranked[1])} also on the card`;
-      look+=`.`;
+      let look=`Coming up ${dayLabel} (${games.length} ${games.length===1?'match':'matches'}): ${joinNames(games.map(fixture))}.`;
       const cnt={};
       games.forEach(g=>{[g.m.home,g.m.away].forEach(t=>{const pid=ownerOf(t);if(!pid)return;(cnt[pid]=cnt[pid]||{n:0,teams:[]});cnt[pid].n++;cnt[pid].teams.push(t);});});
       const multi=Object.keys(cnt).filter(pid=>cnt[pid].n>=2).map(pid=>({name:(playerById(pid)||{}).name||'?',n:cnt[pid].n,teams:cnt[pid].teams})).sort((a,b)=>b.n-a.n);
