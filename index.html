@@ -1039,8 +1039,9 @@ function draftBoard(){
       const isCur = cp && cp.pickNo===pickNo;
       if(entry){
         const eg=groupOf(entry.team), eh=GROUP_LETTERS.indexOf(eg)*30;
-        const es=teamStats(entry.team,SCORE_FROM);
-        const erec=es.p>0?` <span class="trec${es.w>0?" won":""}">${es.w}W ${es.d}D ${es.l}L</span>`:"";
+        const es=teamStats(entry.team,1), ek=teamKoStats(entry.team);
+        const ew=es.w+ek.w, ed=es.d+ek.d, el=es.l+ek.l, ep=es.p+ek.p;   // full-tournament record: all group games + knockouts
+        const erec=ep>0?` <span class="trec${ew>0?" won":""}">${ew}W ${ed}D ${el}L</span>`:"";
         const eelim=isEliminated(entry.team)?` <span class="elim">E</span>`:"";
         cells+=`<td class="cell" style="background:hsl(${eh},48%,95%);box-shadow:inset 3px 0 0 hsl(${eh},45%,52%)"><span class="pno">${pickNo}</span><span class="fl">${flag(entry.team)}</span> ${esc(entry.team)} <span class="tcode" style="color:hsl(${eh},40%,32%)">${code(entry.team)} · ${eg}</span>${erec}${eelim}</td>`;
       }else{
@@ -1064,8 +1065,9 @@ function draftBoard(){
       <div class="pool" id="pool">`;
     avail.forEach(t=>{
       const g=groupOf(t), gi=GROUP_LETTERS.indexOf(g), hue=gi*30;
-      const ps=teamStats(t,SCORE_FROM);
-      const prec=ps.p>0?` <span class="trec${ps.w>0?" won":""}">${ps.w}W ${ps.d}D ${ps.l}L</span>`:"";
+      const ps=teamStats(t,1), pk=teamKoStats(t);
+      const pw=ps.w+pk.w, pd=ps.d+pk.d, pl=ps.l+pk.l, pp=ps.p+pk.p;   // full-tournament record: all group games + knockouts
+      const prec=pp>0?` <span class="trec${pw>0?" won":""}">${pw}W ${pd}D ${pl}L</span>`:"";
       const pelim=isEliminated(t)?` <span class="elim">E</span>`:"";
       pool+=`<button class="pickbtn" data-action="pick-team" data-team="${esc(t)}" data-name="${esc(t.toLowerCase())}"
         style="background:hsl(${hue},48%,96%);border-color:hsl(${hue},40%,74%);border-left:4px solid hsl(${hue},45%,52%)">
