@@ -716,7 +716,7 @@ function teamFixtures(team){
       const home=m.home===team, opp=home?m.away:m.home, played=isPlayed(m);
       const gf=home?m.homeScore:m.awayScore, ga=home?m.awayScore:m.homeScore;
       const res=played?((m.matchday==null) ? (koAdvancer(m)===team?'won':'lost') : (gf>ga?'won':gf===ga?'drew':'lost')):null;
-      const counts=(m.matchday==null || m.matchday>=SCORE_FROM);
+      const counts=matchCounts(m);   // third-place playoff shown but non-scoring
       const pts=(played&&counts)?(res==='won'?3:res==='drew'?1:0):null;
       return {m,opp,home,played,gf,ga,res,counts,pts};
     });
@@ -737,6 +737,8 @@ const KO_ROUND={R32:"Round of 32",R16:"Round of 16",QF:"Quarter-final",SF:"Semi-
 const KO_SHORT={R32:"R32",R16:"R16",QF:"QF",SF:"SF",TP:"3rd",F:"Final"};
 function groupComplete(g){ const ms=DATA.groupMatches.filter(m=>m.group===g); return ms.length>0 && ms.every(isPlayed); }
 function koAdvancer(m){ if(!isPlayed(m)) return null; if(m.homeScore>m.awayScore) return m.home; if(m.awayScore>m.homeScore) return m.away; return m.advance||null; }
+// does a match award sweepstake points? group games from SCORE_FROM; all knockouts EXCEPT the third-place playoff (non-scoring)
+function matchCounts(m){ return m.matchday==null ? m.round!=="TP" : m.matchday>=SCORE_FROM; }
 function koLoserOf(m){ const adv=koAdvancer(m); if(!adv||!m.home||!m.away) return null; return adv===m.home?m.away:m.home; }
 function slotTeam(slot,resolved){
   if(!slot) return null; let mm;
@@ -769,7 +771,7 @@ function allMatches(){ return effMatches().concat(resolveKnockout()); }
 function teamKoStats(team){
   let p=0,w=0,d=0,l=0,gf=0,ga=0,last=null;
   resolveKnockout().forEach(m=>{
-    if(!isPlayed(m)||(m.home!==team&&m.away!==team)) return;
+    if(!isPlayed(m)||!matchCounts(m)||(m.home!==team&&m.away!==team)) return;   // third-place playoff is non-scoring
     const home=m.home===team, f=home?m.homeScore:m.awayScore, a=home?m.awayScore:m.homeScore;
     p++;gf+=f;ga+=a;
     const r=koAdvancer(m)===team?"won":"lost";   // knockout points follow PROGRESSION, not the scoreline (a pen-shootout win still scores 3, no draws in the KO)
@@ -1297,7 +1299,7 @@ function lastResultsDayKey(){
   let best=null;
   allMatches().forEach(m=>{
     if(!isPlayed(m)) return;
-    if(!(m.matchday==null||m.matchday>=SCORE_FROM)) return;
+    if(!matchCounts(m)) return;   // third-place playoff is non-scoring
     const a=aestParts(m); const key=a?a.dateKey:m.date;
     if(best===null||key>best) best=key;
   });
@@ -1324,7 +1326,7 @@ function daySummary(){
   const per={}; const dayMatches=[];
   allMatches().forEach(m=>{
     if(!isPlayed(m)) return;
-    if(!(m.matchday==null||m.matchday>=SCORE_FROM)) return;
+    if(!matchCounts(m)) return;   // third-place playoff is non-scoring
     const a=aestParts(m); const key=a?a.dateKey:m.date;
     if(key!==day) return;
     dayMatches.push(m);
