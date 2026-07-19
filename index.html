@@ -401,6 +401,22 @@
   .day-review .dr-h{font-family:var(--display);font-weight:800;font-size:12.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--pitch-dark);margin-bottom:5px}
   .day-review .dr-body{margin:0;font-size:14px;line-height:1.5;color:var(--ink)}
   .day-review .dr-body strong{color:var(--pitch-dark);font-weight:700}
+  /* Final podium (shown in place of the day-in-review once the tournament is complete) */
+  .podium-wrap{text-align:center}
+  .podium{display:flex;justify-content:center;align-items:flex-end;gap:12px;margin:16px auto 4px;max-width:420px}
+  .pod{display:flex;flex-direction:column;align-items:center;flex:1 1 0;min-width:0}
+  .pod-medal{font-size:26px;line-height:1}
+  .pod-name{font-family:var(--display);font-weight:800;font-size:14px;color:var(--pitch-dark);margin:5px 0 0;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+  .pod-team{font-size:14px;margin:2px 0 0;line-height:1}
+  .pod-pts{font-size:12.5px;color:var(--ink);margin:2px 0 7px}
+  .pod-pts span{color:var(--muted);font-weight:400}
+  .pod-block{width:100%;border-radius:9px 9px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:7px;box-shadow:inset 0 2px 0 rgba(255,255,255,.45)}
+  .pod-block .pod-rank{font-family:var(--display);font-weight:800;font-size:22px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.18)}
+  .pod-1 .pod-block{height:104px;background:linear-gradient(180deg,#f7d774,#e0aa45)}
+  .pod-2 .pod-block{height:78px;background:linear-gradient(180deg,#e4e8ec,#b7c0c8)}
+  .pod-3 .pod-block{height:58px;background:linear-gradient(180deg,#e7bd91,#c8894f)}
+  .pod-champ{font-size:14px;color:var(--ink);margin-top:10px;padding-top:10px;border-top:1px dashed var(--gold-soft)}
+  .pod-champ strong{color:var(--pitch-dark);font-weight:700}
 </style>
 </head>
 <body>
@@ -1420,6 +1436,31 @@ function daySummary(){
   if(!parts.length) return '';
   return `<div class="day-review"><div class="dr-h">📊 Day in review · ${fmtDateLong(day)}</div><p class="dr-body">${parts.join(' ')}</p></div>`;
 }
+// once the final is played, the recap becomes a final podium of the top-3 owners
+function tournamentComplete(){ const f=resolveKnockout().find(m=>m.round==='F'); return !!f && isPlayed(f); }
+function worldChampion(){ const f=resolveKnockout().find(m=>m.round==='F'); return f&&isPlayed(f)?koAdvancer(f):null; }
+function finalPodium(){
+  const lb=leaderboard(); if(!lb.length) return '';
+  const medals=['🥇','🥈','🥉'];
+  const top=lb.slice(0,3);
+  const col=(i)=>{ if(i>=top.length) return '';
+    const ps=top[i], p=playerById(ps.id), champ=worldChampion(), owns=champ&&ownerOf(champ)===ps.id;
+    return `<div class="pod pod-${i+1}">
+      <div class="pod-medal">${medals[i]}</div>
+      <div class="pod-name" title="${esc(p.name)}">${esc(p.name)}</div>
+      ${owns?`<div class="pod-team" title="${esc(champ)} — World Champions">${flag(champ)}</div>`:''}
+      <div class="pod-pts">${ps.pts} <span>pts</span></div>
+      <div class="pod-block"><span class="pod-rank">${i+1}</span></div>
+    </div>`; };
+  const champ=worldChampion(), champOwner=champ?ownerOf(champ):null;
+  const champLine = champ ? `<div class="pod-champ"><span class="fl">${flag(champ)}</span> <strong>${esc(champ)}</strong> won the World Cup${champOwner?` · drafted by <strong>${esc(playerById(champOwner).name)}</strong>`:' · undrafted'}</div>` : '';
+  // classic podium order: silver (2nd) · gold (1st) · bronze (3rd)
+  return `<div class="day-review podium-wrap">
+    <div class="dr-h">🏆 Final podium</div>
+    <div class="podium">${col(1)}${col(0)}${col(2)}</div>
+    ${champLine}
+  </div>`;
+}
 function viewLeaderboard(){
   const head=`<div class="lb-head"><h2>Leaderboard</h2>${lbControls()}</div>`;
   if(!draftComplete()){
@@ -1428,7 +1469,7 @@ function viewLeaderboard(){
       <button class="btn primary" data-action="tab" data-tab="draft">Go to draft</button></div>`;
   }
   const lb=leaderboard();
-  const dr=draftComplete()?daySummary():'';
+  const dr=!draftComplete()?'':(tournamentComplete()?finalPodium():daySummary());
   if(state.lbView==='table') return head+dr+legend()+lbTable(lb);
   const medals=["🥇","🥈","🥉"];
   let html=head+dr+legend();
