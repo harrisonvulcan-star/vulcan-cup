@@ -438,7 +438,7 @@
 
 /* ---------- EMBEDDED TOURNAMENT DATA (real 2026 WC) ---------- */
 const DATA = {
-  "asOf": "2026-07-15",
+  "asOf": "2026-07-19",
   "groups": {
     "A": ["Mexico", "South Korea", "Czechia", "South Africa"],
     "B": ["Switzerland", "Canada", "Qatar", "Bosnia and Herzegovina"],
@@ -597,9 +597,9 @@ DATA.knockout = [
   {"m":99,"round":"QF","date":"2026-07-11","venue":"Hard Rock Stadium, Miami Gardens","homeSlot":"W91","awaySlot":"W92","homeScore":1,"awayScore":2,"status":"played"},
   {"m":100,"round":"QF","date":"2026-07-11","venue":"Arrowhead Stadium, Kansas City","homeSlot":"W95","awaySlot":"W96","homeScore":3,"awayScore":1,"status":"played"},
   {"m":101,"round":"SF","date":"2026-07-14","venue":"AT&T Stadium, Arlington","homeSlot":"W97","awaySlot":"W98","homeScore":0,"awayScore":2,"status":"played"},
-  {"m":102,"round":"SF","date":"2026-07-15","venue":"Mercedes-Benz Stadium, Atlanta","homeSlot":"W99","awaySlot":"W100"},
-  {"m":103,"round":"TP","date":"2026-07-18","venue":"Hard Rock Stadium, Miami Gardens","homeSlot":"L101","awaySlot":"L102"},
-  {"m":104,"round":"F","date":"2026-07-19","venue":"MetLife Stadium, East Rutherford","homeSlot":"W101","awaySlot":"W102"}
+  {"m":102,"round":"SF","date":"2026-07-15","venue":"Mercedes-Benz Stadium, Atlanta","homeSlot":"W99","awaySlot":"W100","homeScore":1,"awayScore":2,"status":"played"},
+  {"m":103,"round":"TP","date":"2026-07-18","venue":"Hard Rock Stadium, Miami Gardens","homeSlot":"L101","awaySlot":"L102","homeScore":4,"awayScore":6,"status":"played"},
+  {"m":104,"round":"F","date":"2026-07-19","venue":"MetLife Stadium, East Rutherford","homeSlot":"W101","awaySlot":"W102","homeScore":1,"awayScore":0,"status":"played"}
 ];
 DATA.knockout.forEach(k=>{ k.id="k"+k.m; k.localTime=k.localTime||null; if(!("home" in k))k.home=null; if(!("away" in k))k.away=null; if(!("homeScore" in k))k.homeScore=null; if(!("awayScore" in k))k.awayScore=null; if(!("advance" in k))k.advance=null; if(!("status" in k))k.status="upcoming"; });
 
